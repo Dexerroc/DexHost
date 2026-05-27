@@ -134,7 +134,8 @@ const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>>
 const hostedPayPalClientId = import.meta.env.VITE_PAYPAL_HOSTED_CLIENT_ID || "BAAAh0BwexhEqCc-x-aB7nAugoGa-LHMtpTifBYJ9xVvUftpbeU2w2St-LTa1AfgwOuoRX7pQCtgzunnMo";
 const launchHostedPayPalButtonIds: Partial<Record<LaunchService["id"], string>> = {
   "launch-help": import.meta.env.VITE_PAYPAL_LAUNCH_HELP_HOSTED_BUTTON_ID || "METBAPJM5CLFS",
-  "setup-service": import.meta.env.VITE_PAYPAL_SETUP_SERVICE_HOSTED_BUTTON_ID || "ZB74AHP2ESKE4"
+  "setup-service": import.meta.env.VITE_PAYPAL_SETUP_SERVICE_HOSTED_BUTTON_ID || "ZB74AHP2ESKE4",
+  "premium-setup": import.meta.env.VITE_PAYPAL_PREMIUM_SETUP_HOSTED_BUTTON_ID || "2D665UL45H6Z2"
 };
 const subscriptionPayPalButtonStyles: Partial<Record<AccountProfile["plan"], { shape: string; color: string; layout: string; label: string }>> = {
   basic: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
