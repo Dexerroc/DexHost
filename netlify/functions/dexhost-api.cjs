@@ -414,14 +414,12 @@ async function withStore(storeName, action, fallback) {
       return await action(getStore({ name: storeName, siteID, token }));
     }
   } catch (error) {
-    if (process.env.NETLIFY === "true") {
+    const isHostedFunction = process.env.NETLIFY === "true" || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT || process.env.DEPLOY_ID || process.env.CONTEXT);
+    if (isHostedFunction) {
       const message = String(error?.message || error);
-      if (/not been configured to use Netlify Blobs|MissingBlobsEnvironmentError|siteID|token|unauthorized|forbidden|401|403|404/i.test(message)) {
-        const nextError = new Error("Netlify Blobs ist nicht erreichbar. Prüfe NETLIFY_SITE_ID und NETLIFY_API_TOKEN oder entferne beide Variablen, wenn Netlify Blobs automatisch bereitstellt.");
-        nextError.statusCode = 503;
-        throw nextError;
-      }
-      throw error;
+      const nextError = new Error(`Netlify Blobs ist nicht erreichbar. Prüfe in der DexHost-Site die Environment Variables NETLIFY_SITE_ID und NETLIFY_API_TOKEN und deploye erneut. Details: ${message}`);
+      nextError.statusCode = 503;
+      throw nextError;
     }
     return fallback();
   }
