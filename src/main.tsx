@@ -127,6 +127,11 @@ const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>>
   business: import.meta.env.VITE_PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   pro: import.meta.env.VITE_PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
 };
+const subscriptionPayPalButtonStyles: Partial<Record<AccountProfile["plan"], { shape: string; color: string; layout: string; label: string }>> = {
+  basic: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
+  business: { shape: "rect", color: "silver", layout: "vertical", label: "subscribe" },
+  pro: { shape: "rect", color: "silver", layout: "vertical", label: "subscribe" }
+};
 const emptyProfileForm: ProfileForm = {
   display_name: "",
   first_name: "",
@@ -1596,7 +1601,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
   );
 }
 
-function PayPalSubscriptionButton({ planName, planId, onApprove }: { planName: string; planId: string; onApprove: (subscriptionId: string) => void }) {
+function PayPalSubscriptionButton({ planName, planId, buttonStyle, onApprove }: { planName: string; planId: string; buttonStyle: { shape: string; color: string; layout: string; label: string }; onApprove: (subscriptionId: string) => void }) {
   const containerId = useMemo(() => `paypal-button-container-${planId}`, [planId]);
   const [status, setStatus] = useState("PayPal Abo-Button wird geladen...");
 
@@ -1608,7 +1613,7 @@ function PayPalSubscriptionButton({ planName, planId, onApprove }: { planName: s
         if (cancelled) return undefined;
         const container = document.getElementById(containerId);
         const buttons = window.paypalSubscription?.Buttons?.({
-          style: { shape: "pill", color: "silver", layout: "vertical", label: "subscribe" },
+          style: buttonStyle,
           createSubscription: (_data, actions) => actions.subscription.create({ plan_id: planId }),
           onApprove: (data) => {
             if (data.subscriptionID) onApprove(data.subscriptionID);
@@ -1630,7 +1635,7 @@ function PayPalSubscriptionButton({ planName, planId, onApprove }: { planName: s
     return () => {
       cancelled = true;
     };
-  }, [containerId, onApprove, planId]);
+  }, [buttonStyle, containerId, onApprove, planId]);
 
   return (
     <div className="paypal-subscription-box">
@@ -1707,13 +1712,14 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
         </article>
         {paidPricingPlans.map((plan) => {
           const subscriptionPlanId = subscriptionPayPalPlanIds[plan.id];
+          const buttonStyle = subscriptionPayPalButtonStyles[plan.id] || { shape: "rect", color: "silver", layout: "vertical", label: "subscribe" };
           return (
             <article className="profile-card billing-plan" key={plan.id}>
               <span>{plan.badge}</span>
               <h2>{plan.name}</h2>
               <strong>{plan.monthly} / Monat</strong>
               <p className="empty-note">{plan.description}</p>
-              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
+              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
             </article>
           );
         })}
