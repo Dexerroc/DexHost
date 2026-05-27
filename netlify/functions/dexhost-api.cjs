@@ -23,6 +23,11 @@ const billingPlans = {
   business: { name: "Business", value: "19.00", currency: "EUR" },
   pro: { name: "Pro", value: "49.00", currency: "EUR" }
 };
+const subscriptionPlanIds = {
+  basic: process.env.PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
+  business: process.env.PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "",
+  pro: process.env.PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || ""
+};
 
 function json(statusCode, body, cookies = []) {
   const response = {
@@ -1084,6 +1089,43 @@ async function capturePayPalOrder(auth, orderId) {
   return { profile, plan: pending.plan, status: captured.status };
 }
 
+async function activatePayPalSubscription(auth, plan, subscriptionId) {
+  const selected = billingPlans[plan];
+  if (!selected) {
+    const error = new Error("Bitte wähle Basic, Business oder Pro.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!subscriptionId) {
+    const error = new Error("PayPal Abo-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const subscription = await paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
+  const expectedPlanId = subscriptionPlanIds[plan];
+  if (expectedPlanId && subscription.plan_id !== expectedPlanId) {
+    const error = new Error("PayPal Abo gehört nicht zum gewählten Tarif.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (subscription.status !== "ACTIVE") {
+    const error = new Error(`PayPal Abo ist noch nicht aktiv. Status: ${subscription.status || "unbekannt"}.`);
+    error.statusCode = 402;
+    throw error;
+  }
+  await blobSetJson(`billing/paypal/subscriptions/${subscriptionId}.json`, {
+    id: subscriptionId,
+    user_id: auth.userId,
+    plan,
+    paypal_plan_id: subscription.plan_id,
+    status: subscription.status,
+    created_at: subscription.create_time || now(),
+    updated_at: now()
+  });
+  const profile = await setProfilePlan(auth, plan, { provider: "paypal-subscription", status: "active", reference: subscriptionId });
+  return { profile, plan, status: subscription.status, subscriptionId };
+}
+
 exports.config = { path: "/api/*" };
 
 exports.handler = async (event, context) => {
@@ -1175,6 +1217,12 @@ exports.handler = async (event, context) => {
 
     if (method === "POST" && path === "/api/billing/paypal/capture") {
       const result = await capturePayPalOrder(auth, clean(bodyJson(event).orderId));
+      return json(200, { ...result, profile: profileOut(result.profile, auth.user) }, auth.cookies);
+    }
+
+    if (method === "POST" && path === "/api/billing/paypal/subscription/activate") {
+      const body = bodyJson(event);
+      const result = await activatePayPalSubscription(auth, clean(body.plan).toLowerCase(), clean(body.subscriptionId));
       return json(200, { ...result, profile: profileOut(result.profile, auth.user) }, auth.cookies);
     }
 

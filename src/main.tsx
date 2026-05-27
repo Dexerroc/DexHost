@@ -110,6 +110,14 @@ declare global {
     paypal?: {
       HostedButtons?: (options: { hostedButtonId: string }) => { render: (selector: string) => Promise<void> | void };
     };
+    paypalSubscription?: {
+      Buttons?: (options: {
+        style: { shape: string; color: string; layout: string; label: string };
+        createSubscription: (data: unknown, actions: { subscription: { create: (options: { plan_id: string }) => Promise<string> | string } }) => Promise<string> | string;
+        onApprove: (data: { subscriptionID: string }) => void;
+        onError?: (error: unknown) => void;
+      }) => { render: (selector: string) => Promise<void> | void };
+    };
   }
 }
 
@@ -118,9 +126,13 @@ const pageOptions = ["Startseite", "Leistungen", "Über uns", "Referenzen", "Pre
 const requiredPages = new Set(["Startseite", "Kontakt"]);
 const hostedPayPalClientId = import.meta.env.VITE_PAYPAL_HOSTED_CLIENT_ID || "BAAAh0BwexhEqCc-x-aB7nAugoGa-LHMtpTifBYJ9xVvUftpbeU2w2St-LTa1AfgwOuoRX7pQCtgzunnMo";
 const hostedPayPalButtonIds: Partial<Record<AccountProfile["plan"], string>> = {
-  basic: import.meta.env.VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID || "CB7H722RRFGF4",
+  basic: import.meta.env.VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID || "",
   business: import.meta.env.VITE_PAYPAL_BUSINESS_HOSTED_BUTTON_ID || "WZWUYYJ64HKL6",
   pro: import.meta.env.VITE_PAYPAL_PRO_HOSTED_BUTTON_ID || "FGAXLRWFW2CZN"
+};
+const subscriptionPayPalClientId = import.meta.env.VITE_PAYPAL_SUBSCRIPTION_CLIENT_ID || "AYpTUnN15JcpJNpAl_EoTNHh87Ad2tJXqeikN2oWVRLgozIw9NFewlNCnqtj--eC24WFQAnMU7eXm-VM";
+const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>> = {
+  basic: import.meta.env.VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ"
 };
 const emptyProfileForm: ProfileForm = {
   display_name: "",
@@ -590,6 +602,30 @@ function ensurePayPalHostedSdk() {
     document.head.appendChild(script);
   });
   return paypalHostedSdkPromise;
+}
+
+let paypalSubscriptionSdkPromise: Promise<void> | null = null;
+function ensurePayPalSubscriptionSdk() {
+  if (window.paypalSubscription?.Buttons) return Promise.resolve();
+  if (paypalSubscriptionSdkPromise) return paypalSubscriptionSdkPromise;
+  paypalSubscriptionSdkPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById("paypal-subscription-sdk") as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("PayPal Abo-Button konnte nicht geladen werden.")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "paypal-subscription-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(subscriptionPayPalClientId)}&vault=true&intent=subscription`;
+    script.async = true;
+    script.dataset.namespace = "paypalSubscription";
+    script.dataset.sdkIntegrationSource = "button-factory";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("PayPal Abo-Button konnte nicht geladen werden."));
+    document.head.appendChild(script);
+  });
+  return paypalSubscriptionSdkPromise;
 }
 
 function designFor(brief: Brief) {
@@ -1129,6 +1165,21 @@ function AppRoutes() {
       setBillingStatus(error instanceof Error ? error.message : "PayPal-Zahlung konnte nicht bestätigt werden.");
     }
   }
+  async function activatePayPalSubscription(plan: AccountProfile["plan"], subscriptionId: string) {
+    setBillingLoadingPlan(plan);
+    setBillingStatus("PayPal-Abo wird serverseitig geprüft...");
+    try {
+      const response = await request<{ profile: AccountProfile; plan: AccountProfile["plan"]; status: string; subscriptionId: string }>("/api/billing/paypal/subscription/activate", { method: "POST", body: JSON.stringify({ plan, subscriptionId }) });
+      setSession((current) => current ? { ...current, profile: response.profile } : current);
+      setProfileForm(toProfileForm(response.profile));
+      setBillingStatus(`PayPal Abo bestätigt. Tarif ${response.plan} ist aktiv.`);
+      routerNavigate(`/billing/success?subscription=${encodeURIComponent(response.subscriptionId)}`, { replace: true });
+    } catch (error) {
+      setBillingStatus(error instanceof Error ? error.message : "PayPal-Abo konnte nicht bestätigt werden.");
+    } finally {
+      setBillingLoadingPlan("");
+    }
+  }
 
   useEffect(() => {
     if (!session || (route !== "/billing" && route !== "/billing/success")) return;
@@ -1209,7 +1260,7 @@ function AppRoutes() {
     return (
       <main className="app-shell route-transition">
         {sidebar}
-        <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} onBack={() => navigate("/dashboard")} onCheckout={(plan) => void startPayPalCheckout(plan)} />
+        <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} onBack={() => navigate("/dashboard")} onCheckout={(plan) => void startPayPalCheckout(plan)} onSubscriptionApprove={(plan, subscriptionId) => void activatePayPalSubscription(plan, subscriptionId)} />
       </main>
     );
   }
@@ -1649,6 +1700,55 @@ function PayPalHostedButton({ planName, hostedButtonId }: { planName: string; ho
   );
 }
 
+function PayPalSubscriptionButton({ planName, planId, onApprove }: { planName: string; planId: string; onApprove: (subscriptionId: string) => void }) {
+  const containerId = useMemo(() => `paypal-button-container-${planId}`, [planId]);
+  const [status, setStatus] = useState("PayPal Abo-Button wird geladen...");
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("PayPal Abo-Button wird geladen...");
+    void ensurePayPalSubscriptionSdk()
+      .then(() => {
+        if (cancelled) return undefined;
+        const container = document.getElementById(containerId);
+        const buttons = window.paypalSubscription?.Buttons?.({
+          style: { shape: "pill", color: "silver", layout: "vertical", label: "subscribe" },
+          createSubscription: (_data, actions) => actions.subscription.create({ plan_id: planId }),
+          onApprove: (data) => {
+            if (data.subscriptionID) onApprove(data.subscriptionID);
+          },
+          onError: (error) => {
+            setStatus(error instanceof Error ? error.message : "PayPal Abo konnte nicht gestartet werden.");
+          }
+        });
+        if (!container || !buttons) throw new Error("PayPal Abo-Button ist nicht verfügbar.");
+        container.innerHTML = "";
+        return Promise.resolve(buttons.render(`#${containerId}`));
+      })
+      .then(() => {
+        if (!cancelled) setStatus("");
+      })
+      .catch((error) => {
+        if (!cancelled) setStatus(error instanceof Error ? error.message : "PayPal Abo-Button konnte nicht geladen werden.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [containerId, onApprove, planId]);
+
+  return (
+    <div className="paypal-hosted-box">
+      <div className="paypal-hosted-head">
+        <strong>Monatliches PayPal-Abo</strong>
+        <span>{planName}</span>
+      </div>
+      <div id={containerId} className="paypal-hosted-container" />
+      {status && <small>{status}</small>}
+      {!status && <small>Nach Freigabe prüft DexHost das Abo serverseitig und aktiviert den Tarif.</small>}
+    </div>
+  );
+}
+
 function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profile: AccountProfile; status: string; onBilling: () => void; onDashboard: () => void }) {
   const isConfirmed = status.includes("bestätigt") || status.includes("aktiv") || ["basic", "business", "pro", "admin"].includes(profile.plan);
   return (
@@ -1688,7 +1788,7 @@ function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profi
   );
 }
 
-function BillingPage({ profile, status, loadingPlan, onBack, onCheckout }: { profile: AccountProfile; status: string; loadingPlan: string; onBack: () => void; onCheckout: (plan: AccountProfile["plan"]) => void }) {
+function BillingPage({ profile, status, loadingPlan, onBack, onCheckout, onSubscriptionApprove }: { profile: AccountProfile; status: string; loadingPlan: string; onBack: () => void; onCheckout: (plan: AccountProfile["plan"]) => void; onSubscriptionApprove: (plan: AccountProfile["plan"], subscriptionId: string) => void }) {
   return (
     <section className="workspace account-page">
       <header className="topbar">
@@ -1709,18 +1809,23 @@ function BillingPage({ profile, status, loadingPlan, onBack, onCheckout }: { pro
           <p className="empty-note">Entwerfen, bearbeiten und testen.</p>
           <button disabled>{profile.plan === "free" ? "Aktueller Tarif" : "Kostenloser Tarif"}</button>
         </article>
-        {paidPricingPlans.map((plan) => (
-          <article className="profile-card billing-plan" key={plan.id}>
-            <span>{plan.badge}</span>
-            <h2>{plan.name}</h2>
-            <strong>{plan.monthly} / Monat</strong>
-            <p className="empty-note">{plan.description}</p>
-            {hostedPayPalButtonIds[plan.id] && <PayPalHostedButton planName={plan.name} hostedButtonId={hostedPayPalButtonIds[plan.id] || ""} />}
-            <button className={plan.featured ? "primary" : ""} disabled={profile.plan === plan.id || Boolean(loadingPlan)} onClick={() => onCheckout(plan.id)}>
-              {profile.plan === plan.id ? "Aktueller Tarif" : loadingPlan === plan.id ? "PayPal wird geöffnet..." : "Mit PayPal wählen"}
-            </button>
-          </article>
-        ))}
+        {paidPricingPlans.map((plan) => {
+          const subscriptionPlanId = subscriptionPayPalPlanIds[plan.id];
+          return (
+            <article className="profile-card billing-plan" key={plan.id}>
+              <span>{plan.badge}</span>
+              <h2>{plan.name}</h2>
+              <strong>{plan.monthly} / Monat</strong>
+              <p className="empty-note">{plan.description}</p>
+              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : hostedPayPalButtonIds[plan.id] && <PayPalHostedButton planName={plan.name} hostedButtonId={hostedPayPalButtonIds[plan.id] || ""} />}
+              {!subscriptionPlanId && (
+                <button className={plan.featured ? "primary" : ""} disabled={profile.plan === plan.id || Boolean(loadingPlan)} onClick={() => onCheckout(plan.id)}>
+                  {profile.plan === plan.id ? "Aktueller Tarif" : loadingPlan === plan.id ? "PayPal wird geöffnet..." : "Mit PayPal wählen"}
+                </button>
+              )}
+            </article>
+          );
+        })}
       </section>
     </section>
   );
