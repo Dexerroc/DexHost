@@ -1,0 +1,3 @@
+/api/* /.netlify/functions/dexhost-api/:splat 200
+https://:site.dexhost.de/* /s/:site/:splat 200!
+/* /index.html 200
