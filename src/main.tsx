@@ -130,7 +130,7 @@ const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>>
 const subscriptionPayPalButtonStyles: Partial<Record<AccountProfile["plan"], { shape: string; color: string; layout: string; label: string }>> = {
   basic: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
   business: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
-  pro: { shape: "rect", color: "silver", layout: "vertical", label: "subscribe" }
+  pro: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" }
 };
 const emptyProfileForm: ProfileForm = {
   display_name: "",
