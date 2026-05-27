@@ -400,8 +400,7 @@ async function withStore(storeName, action, fallback) {
     const { getStore } = await import("@netlify/blobs");
     const siteID = clean(process.env.NETLIFY_SITE_ID || process.env.SITE_ID);
     const token = clean(process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN);
-    const options = siteID && token ? { siteID, token } : undefined;
-    const store = options ? getStore(storeName, options) : getStore(storeName);
+    const store = siteID && token ? getStore({ name: storeName, siteID, token }) : getStore(storeName);
     return await action(store);
   } catch (error) {
     if (process.env.NETLIFY === "true") {
@@ -414,6 +413,15 @@ async function withStore(storeName, action, fallback) {
       throw error;
     }
     return fallback();
+  }
+}
+
+async function connectBlobs(event) {
+  try {
+    const { connectLambda } = await import("@netlify/blobs");
+    if (typeof connectLambda === "function") connectLambda(event);
+  } catch {
+    // Explicit NETLIFY_SITE_ID + NETLIFY_API_TOKEN still works without lambda context.
   }
 }
 
@@ -943,6 +951,7 @@ async function publishWebsite(auth, websiteId) {
 exports.config = { path: "/api/*" };
 
 exports.handler = async (event, context) => {
+  await connectBlobs(event);
   if (event.httpMethod === "OPTIONS") return json(204, {});
   try {
     const method = event.httpMethod;
