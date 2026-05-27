@@ -1349,6 +1349,28 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
 .paypal-subscription-container, .paypal-onetime-container {
   min-height: 2.7rem;
 }
+.launch-service-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.launch-service-grid .pricing-card {
+  grid-template-rows: auto auto 1fr auto;
+  min-height: 35rem;
+}
+.launch-service-grid .paypal-onetime-box {
+  align-self: end;
+  background: #f7f8f4;
+  border-color: rgba(16, 24, 32, .12);
+}
+.launch-service-grid .pricing-card.featured .paypal-onetime-box {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(143, 211, 204, .18);
+}
+.launch-service-grid .paypal-onetime-head {
+  color: #101820;
+}
+.launch-service-grid .pricing-card.featured .paypal-onetime-head {
+  color: #dce8f6;
+}
 .billing-plan-missing {
   border: 1px solid rgba(248, 200, 113, .22);
   border-radius: 10px;

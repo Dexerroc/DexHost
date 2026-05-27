@@ -1311,7 +1311,7 @@ function AppRoutes() {
   }
 
   if (publicPageKey) {
-    return <PublicPage key={route} pageKey={publicPageKey} session={session || null} currentPath={route} onNavigate={navigate} />;
+    return <PublicPage key={route} pageKey={publicPageKey} session={session || null} currentPath={route} launchStatus={launchPaymentStatus} launchLoadingService={launchPaymentLoading} onLaunchCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} onNavigate={navigate} />;
   }
 
   if (isAuthRoute) {
@@ -1473,7 +1473,7 @@ function ProtectedLoading({ message }: { message: string }) {
 }
 
 function PublicNav({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
-  const links: Array<[string, string]> = [["Funktionen", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["Launch-Hilfe", "/launch-hilfe"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
+  const links: Array<[string, string]> = [["Funktionen", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
   const currentExample = exampleCaseFor(currentPath);
   const websitePreviewPath = currentExample ? `/examples/${currentExample.slug}` : `/examples/${exampleCases[0].slug}`;
   const isActive = (path: string) => currentPath === path || (path === "/examples" && currentPath.startsWith("/examples/"));
@@ -1634,12 +1634,12 @@ function ExampleDetailPage({ example, session, currentPath, onNavigate }: { exam
   );
 }
 
-function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: PublicPageKey; session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
+function PublicPage({ pageKey, session, currentPath, launchStatus, launchLoadingService, onLaunchCheckout, onNavigate }: { pageKey: PublicPageKey; session: AuthSession | null; currentPath: string; launchStatus: string; launchLoadingService: string; onLaunchCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
   const page = publicPages[pageKey];
   const isContact = pageKey === "contact";
   const isExamples = pageKey === "examples";
   const featuredExamplePath = `/examples/${exampleCases[0].slug}`;
-  if (pageKey === "pricing") return <PricingPage session={session} currentPath={currentPath} onNavigate={onNavigate} />;
+  if (pageKey === "pricing") return <PricingPage session={session} currentPath={currentPath} status={launchStatus} loadingService={launchLoadingService} onCheckout={onLaunchCheckout} onNavigate={onNavigate} />;
   return (
     <main className="public-shell route-transition">
       <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
@@ -1728,6 +1728,38 @@ function PayPalHostedOneTimeButton({ serviceName, hostedButtonId }: { serviceNam
   );
 }
 
+function LaunchServiceCards({ loadingService, onCheckout }: { loadingService: string; onCheckout: (serviceId: LaunchService["id"]) => void }) {
+  return (
+    <div className="pricing-grid launch-service-grid">
+      {launchServices.map((service) => {
+        const hostedButtonId = launchHostedPayPalButtonIds[service.id];
+        return (
+          <article className={service.featured ? "pricing-card featured" : "pricing-card"} key={service.id}>
+            <div className="pricing-card-head">
+              <span>{service.id === "launch-help" ? "Schneller Check" : service.id === "setup-service" ? "Geführter Start" : "Mehr Feinschliff"}</span>
+              <h3>{service.name}</h3>
+              <p>{service.description}</p>
+            </div>
+            <div className="pricing-money">
+              <div><small>Einmalig</small><strong>{service.price}</strong><span>zzgl. USt.</span></div>
+            </div>
+            <ul className="pricing-feature-list">
+              {service.features.map((feature) => <li key={feature}>{feature}</li>)}
+            </ul>
+            {hostedButtonId ? (
+              <PayPalHostedOneTimeButton serviceName={service.name} hostedButtonId={hostedButtonId} />
+            ) : (
+              <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
+                {loadingService === service.id ? "PayPal wird geöffnet..." : service.cta}
+              </button>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 function LaunchHelpPage({ session, currentPath, status, loadingService, onNavigate, onCheckout }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onNavigate: (path: string) => void; onCheckout: (serviceId: LaunchService["id"]) => void }) {
   return (
     <main className="public-shell pricing-shell route-transition">
@@ -1756,27 +1788,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
           <h2>Setup-Leistungen</h2>
           <p>Klare Pakete für unterschiedliche Situationen: kurzer Check, geführte Einrichtung oder intensiver Premium-Feinschliff.</p>
         </div>
-        <div className="pricing-grid launch-service-grid">
-          {launchServices.map((service) => (
-            <article className={service.featured ? "pricing-card featured" : "pricing-card"} key={service.id}>
-              <div className="pricing-card-head">
-                <span>{service.id === "launch-help" ? "Schneller Check" : service.id === "setup-service" ? "Geführter Start" : "Mehr Feinschliff"}</span>
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-              </div>
-              <div className="pricing-money">
-                <div><small>Einmalig</small><strong>{service.price}</strong><span>zzgl. USt.</span></div>
-              </div>
-              <ul className="pricing-feature-list">
-                {service.features.map((feature) => <li key={feature}>{feature}</li>)}
-              </ul>
-              {launchHostedPayPalButtonIds[service.id] && <PayPalHostedOneTimeButton serviceName={service.name} hostedButtonId={launchHostedPayPalButtonIds[service.id] || ""} />}
-              <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
-                {loadingService === service.id ? "PayPal wird geöffnet..." : service.cta}
-              </button>
-            </article>
-          ))}
-        </div>
+        <LaunchServiceCards loadingService={loadingService} onCheckout={onCheckout} />
       </section>
 
       <section className="pricing-faq launch-faq">
@@ -1788,7 +1800,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
   );
 }
 
-function PricingPage({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
+function PricingPage({ session, currentPath, status, loadingService, onCheckout, onNavigate }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
   const billingTarget = session ? "/billing" : "/register";
   return (
     <main className="public-shell pricing-shell route-transition">
@@ -1836,23 +1848,32 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         </div>
       </section>
 
+      {status && <p className={status.includes("konnte") || status.includes("Bitte") ? "form-message error launch-message" : "form-message success launch-message"}>{status}</p>}
+
+      <section className="pricing-band" id="launch-hilfe">
+        <div className="public-section-head">
+          <h2>Optionale Launch-Hilfe</h2>
+          <p>Du kannst DexHost selbst einrichten. Wenn es schneller professionell wirken soll, buchst du hier eine einmalige Hilfe direkt per PayPal.</p>
+        </div>
+        <LaunchServiceCards loadingService={loadingService} onCheckout={onCheckout} />
+      </section>
+
       <section className="pricing-compare">
         <div>
-          <h2>Optionale Einrichtung</h2>
-          <p>Die Plattform bleibt selbst bedienbar. Einrichtung ist ein zusätzlicher Service, wenn ein Kunde weniger Zeit investieren oder einen sauber geführten Launch möchte.</p>
+          <h2>Selbst machen oder Hilfe buchen?</h2>
+          <p>Die Monatspläne bleiben fair. Einrichtung ist kein Zwang, sondern eine Zusatzleistung für Kunden, die weniger Zeit investieren möchten.</p>
         </div>
         <div className="pricing-table">
-          {[
-            { name: "DIY", price: "0 EUR", body: "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Veröffentlichung erlaubt.", serviceId: "" },
-            ...launchServices.map((service) => ({ name: service.name, price: service.price, body: service.description, serviceId: service.id }))
-          ].map(({ name, price, body, serviceId }) => (
-            <article key={name}>
-              <h3>{name}</h3>
-              <strong>{price}</strong>
-              <p>{body}</p>
-              {serviceId && <button onClick={() => onNavigate("/launch-hilfe")}>Einmalzahlung ansehen</button>}
-            </article>
-          ))}
+          <article>
+            <h3>Selbst einrichten</h3>
+            <strong>0 EUR</strong>
+            <p>Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern dein Tarif Veröffentlichung erlaubt.</p>
+          </article>
+          <article>
+            <h3>Hilfe dazubuchen</h3>
+            <strong>ab 49 EUR</strong>
+            <p>Launch-Hilfe, Setup-Service oder Premium-Setup direkt auf dieser Preiseseite kaufen.</p>
+          </article>
         </div>
       </section>
 
