@@ -1167,7 +1167,7 @@ function PublicStudioVisual() {
 }
 
 function ExampleBrowserMockup({ example, hero = false }: { example: ExampleCase; hero?: boolean }) {
-  const brand = example.title.split(" ").slice(0, 2).join(" ");
+  const brand = example.title.includes("&") ? example.title : example.title.split(" ").slice(0, 2).join(" ");
   const style = {
     "--example-a": example.colors[0],
     "--example-b": example.colors[1],
