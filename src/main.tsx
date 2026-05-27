@@ -108,6 +108,9 @@ type LaunchService = { id: "launch-help" | "setup-service" | "premium-setup"; na
 
 declare global {
   interface Window {
+    paypalHosted?: {
+      HostedButtons?: (options: { hostedButtonId: string }) => { render: (selector: string) => Promise<void> | void };
+    };
     paypalSubscription?: {
       Buttons?: (options: {
         style: { shape: string; color: string; layout: string; label: string };
@@ -127,6 +130,10 @@ const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>>
   basic: import.meta.env.VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-75N62518ED122145SNILXN2Y",
   business: import.meta.env.VITE_PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   pro: import.meta.env.VITE_PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
+};
+const hostedPayPalClientId = import.meta.env.VITE_PAYPAL_HOSTED_CLIENT_ID || "BAAAh0BwexhEqCc-x-aB7nAugoGa-LHMtpTifBYJ9xVvUftpbeU2w2St-LTa1AfgwOuoRX7pQCtgzunnMo";
+const launchHostedPayPalButtonIds: Partial<Record<LaunchService["id"], string>> = {
+  "launch-help": import.meta.env.VITE_PAYPAL_LAUNCH_HELP_HOSTED_BUTTON_ID || "METBAPJM5CLFS"
 };
 const subscriptionPayPalButtonStyles: Partial<Record<AccountProfile["plan"], { shape: string; color: string; layout: string; label: string }>> = {
   basic: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
@@ -621,6 +628,29 @@ function cleanLabel(value = "") {
 }
 function pageSummary(value = "") {
   return briefPages(value).join(", ");
+}
+
+let paypalHostedSdkPromise: Promise<void> | null = null;
+function ensurePayPalHostedSdk() {
+  if (window.paypalHosted?.HostedButtons) return Promise.resolve();
+  if (paypalHostedSdkPromise) return paypalHostedSdkPromise;
+  paypalHostedSdkPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById("paypal-hosted-buttons-sdk") as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("PayPal Button konnte nicht geladen werden.")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "paypal-hosted-buttons-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(hostedPayPalClientId)}&components=hosted-buttons&disable-funding=venmo&currency=EUR`;
+    script.async = true;
+    script.dataset.namespace = "paypalHosted";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("PayPal Button konnte nicht geladen werden."));
+    document.head.appendChild(script);
+  });
+  return paypalHostedSdkPromise;
 }
 
 let paypalSubscriptionSdkPromise: Promise<void> | null = null;
@@ -1605,6 +1635,45 @@ function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: Pu
   );
 }
 
+function PayPalHostedOneTimeButton({ serviceName, hostedButtonId }: { serviceName: string; hostedButtonId: string }) {
+  const containerId = useMemo(() => `paypal-container-${hostedButtonId}`, [hostedButtonId]);
+  const [status, setStatus] = useState("PayPal Button wird geladen...");
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("PayPal Button wird geladen...");
+    void ensurePayPalHostedSdk()
+      .then(() => {
+        if (cancelled) return undefined;
+        const container = document.getElementById(containerId);
+        const hostedButton = window.paypalHosted?.HostedButtons?.({ hostedButtonId });
+        if (!container || !hostedButton) throw new Error("PayPal Hosted Button ist nicht verfügbar.");
+        container.innerHTML = "";
+        return Promise.resolve(hostedButton.render(`#${containerId}`));
+      })
+      .then(() => {
+        if (!cancelled) setStatus("");
+      })
+      .catch((error) => {
+        if (!cancelled) setStatus(error instanceof Error ? error.message : "PayPal Button konnte nicht geladen werden.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [containerId, hostedButtonId]);
+
+  return (
+    <div className="paypal-onetime-box">
+      <div className="paypal-onetime-head">
+        <strong>PayPal Einmalzahlung</strong>
+        <span>{serviceName}</span>
+      </div>
+      <div id={containerId} className="paypal-onetime-container" />
+      {status && <small>{status}</small>}
+    </div>
+  );
+}
+
 function LaunchHelpPage({ session, currentPath, status, loadingService, onNavigate, onCheckout }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onNavigate: (path: string) => void; onCheckout: (serviceId: LaunchService["id"]) => void }) {
   return (
     <main className="public-shell pricing-shell route-transition">
@@ -1647,6 +1716,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
               <ul className="pricing-feature-list">
                 {service.features.map((feature) => <li key={feature}>{feature}</li>)}
               </ul>
+              {launchHostedPayPalButtonIds[service.id] && <PayPalHostedOneTimeButton serviceName={service.name} hostedButtonId={launchHostedPayPalButtonIds[service.id] || ""} />}
               <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
                 {loadingService === service.id ? "PayPal wird geöffnet..." : service.cta}
               </button>

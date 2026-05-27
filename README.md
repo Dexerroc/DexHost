@@ -101,6 +101,8 @@ PAYPAL_CLIENT_SECRET=
 PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID=P-75N62518ED122145SNILXN2Y
 PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID=P-78459601WB512822ENILXPCQ
 PAYPAL_PRO_SUBSCRIPTION_PLAN_ID=P-37230392XM0019717NILXOXA
+VITE_PAYPAL_HOSTED_CLIENT_ID=BAAAh0BwexhEqCc-x-aB7nAugoGa-LHMtpTifBYJ9xVvUftpbeU2w2St-LTa1AfgwOuoRX7pQCtgzunnMo
+VITE_PAYPAL_LAUNCH_HELP_HOSTED_BUTTON_ID=METBAPJM5CLFS
 VITE_PAYPAL_SUBSCRIPTION_CLIENT_ID=AYpTUnN15JcpJNpAl_EoTNHh87Ad2tJXqeikN2oWVRLgozIw9NFewlNCnqtj--eC24WFQAnMU7eXm-VM
 VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID=P-75N62518ED122145SNILXN2Y
 VITE_PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID=P-78459601WB512822ENILXPCQ
@@ -111,7 +113,7 @@ IMAGE_UPLOAD_MAX_BYTES=5242880
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
-PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Launch-Hilfe, Setup-Service und Premium-Setup laufen als separate Einmalzahlungen ueber `/launch-hilfe`; auch diese Zahlungen werden erst nach serverseitigem PayPal Capture als gebucht gespeichert. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
+PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Launch-Hilfe, Setup-Service und Premium-Setup laufen als separate Einmalzahlungen ueber `/launch-hilfe`; diese Zahlungen werden erst nach serverseitigem PayPal Capture als gebucht gespeichert. Optional kann ein PayPal Hosted Button fuer die Launch-Hilfe angezeigt werden, die sichere Account-Zuordnung bleibt aber die Netlify-Function-Route. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
 
 ## Entwicklung
 
