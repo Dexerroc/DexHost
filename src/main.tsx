@@ -120,7 +120,7 @@ const hostedPayPalClientId = import.meta.env.VITE_PAYPAL_HOSTED_CLIENT_ID || "BA
 const hostedPayPalButtonIds: Partial<Record<AccountProfile["plan"], string>> = {
   basic: import.meta.env.VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID || "CB7H722RRFGF4",
   business: import.meta.env.VITE_PAYPAL_BUSINESS_HOSTED_BUTTON_ID || "WZWUYYJ64HKL6",
-  pro: import.meta.env.VITE_PAYPAL_PRO_HOSTED_BUTTON_ID || ""
+  pro: import.meta.env.VITE_PAYPAL_PRO_HOSTED_BUTTON_ID || "FGAXLRWFW2CZN"
 };
 const emptyProfileForm: ProfileForm = {
   display_name: "",
