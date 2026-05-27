@@ -123,7 +123,8 @@ const pageOptions = ["Startseite", "Leistungen", "Über uns", "Referenzen", "Pre
 const requiredPages = new Set(["Startseite", "Kontakt"]);
 const subscriptionPayPalClientId = import.meta.env.VITE_PAYPAL_SUBSCRIPTION_CLIENT_ID || "AYpTUnN15JcpJNpAl_EoTNHh87Ad2tJXqeikN2oWVRLgozIw9NFewlNCnqtj--eC24WFQAnMU7eXm-VM";
 const subscriptionPayPalPlanIds: Partial<Record<AccountProfile["plan"], string>> = {
-  basic: import.meta.env.VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
+  basic: import.meta.env.VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-75N62518ED122145SNILXN2Y",
+  business: import.meta.env.VITE_PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   pro: import.meta.env.VITE_PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
 };
 const emptyProfileForm: ProfileForm = {
