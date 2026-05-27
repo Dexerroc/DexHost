@@ -155,7 +155,7 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     navLabel: "Start",
     title: "AI Website Studio für Firmenwebsites mit eigener Handschrift.",
     intro: "DexHost verbindet KI-Entwurf, professionellen Block-Editor und Netlify-Publishing. Besucher können Angebot und Beispiele ansehen, ein Account wird erst beim Öffnen des Baukastens gebraucht.",
-    proof: ["Öffentliche Seiten ohne Login", "Editor nur nach Session-Check", "Netlify Identity, Functions und Blobs"],
+    proof: ["Öffentliche Seiten ohne Login", "Editor nur nach Session-Check", "Netlify Functions und Blobs"],
     sections: [
       { title: "Design mit Kontrolle", body: "Die KI erstellt Struktur, Varianten, Farben und Texte. Der Nutzer entscheidet anschließend über Sections, Layouts, Bilder, SEO und Publishing." },
       { title: "Keine Gleichförmigkeit", body: "Section-Reihenfolge, Bildpositionen, Typografie und Designsystem werden kombiniert, damit Websites nicht wie dieselbe Vorlage wirken." },
@@ -213,7 +213,7 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     proof: ["Netlify Forms", "Schnelle Rückmeldung", "MVP-freundlicher Stack"],
     sections: [
       { title: "Projektanfrage", body: "Beschreibe Branche, Zielgruppe, Stil und vorhandene Bilder." },
-      { title: "Technik", body: "Netlify Hosting, Identity, Functions, Blobs und Deploys halten die Plattform schlank." },
+      { title: "Technik", body: "Netlify Hosting, Functions, Blobs und Deploys halten die Plattform schlank." },
       { title: "Launch", body: "Kostenlose Subdomain zuerst, eigene Domain später als Premium-Funktion." }
     ]
   },
@@ -232,9 +232,9 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     navLabel: "Datenschutz",
     title: "Datenschutzinformationen für DexHost.",
     intro: "Diese Seite ist öffentlich erreichbar und beschreibt die vorgesehenen Bausteine für Auth, Speicher, Forms und KI-Funktionen.",
-    proof: ["Netlify Identity", "Netlify Blobs", "OpenAI optional"],
+    proof: ["Serverseitige Auth", "Netlify Blobs", "OpenAI optional"],
     sections: [
-      { title: "Accountdaten", body: "Login- und Profildaten werden über Netlify Identity und serverseitige Functions verarbeitet." },
+      { title: "Accountdaten", body: "Login- und Profildaten werden über Netlify Functions und Blobs verarbeitet." },
       { title: "Website-Daten", body: "Projekte, JSON und Assets liegen nutzerbezogen in Netlify Blobs oder einer späteren Datenbank." },
       { title: "KI-Funktionen", body: "KI-Aufrufe laufen serverseitig. Inhalte sollten nur mit nötigen Projektdaten gesendet werden." }
     ]
@@ -605,7 +605,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, { ...options, credentials: "include", headers });
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
-    if (path.startsWith("/api/")) throw new Error("Die DexHost API ist nicht erreichbar. Prüfe in Netlify, ob Functions deployed sind und Identity aktiviert ist.");
+    if (path.startsWith("/api/")) throw new Error("Die DexHost API ist nicht erreichbar. Prüfe in Netlify, ob Functions deployed sind.");
     throw new Error("Unexpected response type.");
   }
   const data = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
@@ -804,7 +804,7 @@ function AppRoutes() {
       if (!cookieValue("dexhost_csrf")) await request<{ csrfToken: string }>("/api/auth/csrf");
       if (authMode === "forgot") {
         await request<{ ok: boolean }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email: authForm.email }) });
-        setAuthStatus("Wenn der Account existiert, wurde eine Wiederherstellungs-E-Mail versendet.");
+        setAuthStatus("Wenn der Account existiert, wird der Reset vorbereitet. E-Mail-Versand wird später angebunden.");
         return;
       }
       const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
@@ -1049,7 +1049,7 @@ function AppRoutes() {
     return <AuthScreen key={route} mode={authMode} form={authForm} status={authStatus} loading={authLoading} session={session || null} currentPath={route} onMode={setAuthMode} onForm={setAuthForm} onSubmit={submitAuth} onNavigate={navigate} />;
   }
 
-  if (session === undefined) return <ProtectedLoading message="Netlify Identity Session wird serverseitig geprüft..." />;
+  if (session === undefined) return <ProtectedLoading message="DexHost Session wird serverseitig geprüft..." />;
   if (!session) return <ProtectedLoading message="Weiterleitung zum Login..." />;
 
   const sidebar = (
@@ -1128,7 +1128,7 @@ function AppRoutes() {
       <section className="workspace">
         <header className="topbar">
           <div><strong>DexHost Studio</strong><span>{website.publishing.subdomain}</span></div>
-          <div className="status-row"><span>OpenAI: {integrations?.openai?.configured ? integrations.openai.model : "Fallback"}</span><span>Storage: {integrations?.netlify?.blobs ? "Netlify Blobs" : "Function"}</span><span>Identity: Netlify</span><span>SSL: automatic</span></div>
+          <div className="status-row"><span>OpenAI: {integrations?.openai?.configured ? integrations.openai.model : "Fallback"}</span><span>Storage: {integrations?.netlify?.blobs ? "Netlify Blobs" : "Function"}</span><span>Auth: Functions</span><span>SSL: automatic</span></div>
         </header>
         <section className="brief-panel">
           <div className="page-title"><h1>Erstelle Firmenwebsites, die nicht gleich aussehen.</h1><p>DexHost fragt sauber an, generiert Struktur und Designvorschläge, und lässt jede Section kontrollierbar bearbeiten.</p></div>
@@ -1551,7 +1551,7 @@ function AccountPage({ profile, form, status, saving, uploadConfig, onChange, on
     <section className="workspace account-page">
       <header className="topbar">
         <div><strong>Profil & Account</strong><span>/dashboard/profile</span></div>
-        <div className="status-row"><span>Identity: Netlify</span><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span></div>
+        <div className="status-row"><span>Auth: Functions</span><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span></div>
       </header>
       <form className="account-layout" onSubmit={onSave}>
         <section className="account-hero">
@@ -1634,7 +1634,7 @@ function AuthScreen({ mode, form, status, loading, session, currentPath, onMode,
         <div className="brand"><div>DH</div><strong>DexHost</strong></div>
         <div className="auth-copy">
           <h1>{title}</h1>
-          <p>Login läuft über Netlify Identity. Projekte, Bilder, KI-Aufrufe und Publishing werden anschließend serverseitig in Netlify Functions geprüft.</p>
+          <p>Login läuft über Netlify Functions mit HttpOnly-Cookies. Projekte, Bilder, KI-Aufrufe und Publishing werden anschließend serverseitig geprüft.</p>
         </div>
         <form onSubmit={onSubmit}>
           {mode === "register" && <label>Name<input value={form.displayName} onChange={(event) => onForm({ ...form, displayName: event.target.value })} autoComplete="name" /></label>}

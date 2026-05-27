@@ -6,7 +6,7 @@ Professioneller KI-Block-Builder fuer Firmenwebsites. Netlify ist die Hauptplatt
 
 - React + Vite + Tailwind CSS
 - Netlify Hosting
-- Netlify Identity fuer Login, Register, Passwort-Reset und E-Mail-Verifizierung
+- Netlify Functions + Blobs fuer Login, Register, Sessions und Profildaten
 - Netlify Functions als alleiniger Gatekeeper fuer Projekte, Uploads, KI-Aufrufe, Plan-Checks und Publishing
 - Netlify Blobs fuer Profile, Website-JSON und Bilddateien
 - Netlify Forms fuer Kontaktformulare
@@ -17,12 +17,12 @@ Professioneller KI-Block-Builder fuer Firmenwebsites. Netlify ist die Hauptplatt
 
 Der Editor darf im Browser laufen, aber keine sicherheitsrelevante Entscheidung wird im Frontend getroffen.
 
-- Identity-JWTs werden in HttpOnly-Cookies ueber Functions gehalten.
+- Session-Tokens werden in HttpOnly-Cookies gehalten und serverseitig in Blobs validiert.
 - Schreibende Function-Routen pruefen einen CSRF-Token (`dexhost_csrf` + `X-DexHost-CSRF`).
-- Jede geschuetzte Route ruft Netlify Identity serverseitig ab.
+- Jede geschuetzte Route prueft die Session serverseitig.
 - Projekte werden mit `user_id` in Netlify Blobs gespeichert.
 - Lesen, Speichern, Loeschen, Asset-Upload und Asset-Liste pruefen den Website-Besitz in der Function.
-- Plaene und Rollen kommen aus serverseitigen Profilen oder verifizierten Identity-App-Metadaten.
+- Plaene und Rollen kommen aus serverseitigen Profilen.
 - E-Mail, Plan, Account-Status und Stripe-/Billing-Felder werden nicht durch Frontend-Payloads geaendert.
 - Publishing und Custom-Domain-Vorbereitung sind nur fuer `basic`, `business`, `pro` und `admin` erlaubt.
 - Bilder werden nur ueber `POST /api/websites/:id/assets` hochgeladen und serverseitig auf Typ/Groesse validiert.
@@ -93,7 +93,7 @@ DEXHOST_SUBDOMAIN_SUFFIX=dexhost.de
 IMAGE_UPLOAD_MAX_BYTES=5242880
 ```
 
-Netlify Identity muss im Netlify-Projekt aktiviert sein. Netlify Blobs werden in Functions ueber `@netlify/blobs` verwendet; lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
+Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
 ## Entwicklung
 
@@ -102,4 +102,4 @@ npm run dev
 npm run build
 ```
 
-Netlify leitet `/api/*` auf `netlify/functions/dexhost-api.cjs`. Fuer lokale Identity-Flows ist `netlify dev` sinnvoll, weil es Identity/Functions naeher an der Produktionsumgebung emuliert.
+Netlify leitet `/api/*` auf `netlify/functions/dexhost-api.cjs`. Fuer lokale API-Flows ist `netlify dev` sinnvoll, weil es Functions und Blobs naeher an der Produktionsumgebung emuliert.

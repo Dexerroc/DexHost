@@ -139,83 +139,6 @@ function assertCsrf(event) {
   }
 }
 
-function originFor(event) {
-  const proto = event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https";
-  const host = event.headers.host || event.headers.Host || process.env.URL || "localhost:8888";
-  return host.startsWith("http") ? host.replace(/\/$/, "") : `${proto}://${host}`;
-}
-
-function identityBase(event, context) {
-  return clean(context?.clientContext?.identity?.url || process.env.NETLIFY_IDENTITY_URL || `${originFor(event)}/.netlify/identity`).replace(/\/$/, "");
-}
-
-async function identityRequest(event, context, endpoint, options = {}) {
-  const base = identityBase(event, context);
-  const headers = { ...(options.headers || {}) };
-  if (options.token) headers.Authorization = `Bearer ${options.token}`;
-  const response = await fetch(`${base}/${endpoint.replace(/^\//, "")}`, {
-    method: options.method || "POST",
-    headers,
-    body: options.body
-  });
-  const text = await response.text();
-  let data = {};
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { message: text || "Netlify Identity returned a non-JSON response." };
-  }
-  if (!response.ok) {
-    const message = data.msg || data.error_description || data.error || data.message || "Netlify Identity request failed.";
-    const identityMissing = response.status === 404 && /<!doctype html|page not found/i.test(String(message));
-    const error = new Error(identityMissing ? "Netlify Identity ist für diese Site noch nicht aktiviert. Aktiviere Identity in Netlify und deploye danach erneut." : message);
-    error.statusCode = response.status === 400 ? 401 : response.status;
-    throw error;
-  }
-  return data;
-}
-
-async function identitySignup(event, context, email, password, displayName) {
-  return identityRequest(event, context, "signup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, data: { display_name: displayName, full_name: displayName } })
-  });
-}
-
-async function identityLogin(event, context, email, password) {
-  const form = new URLSearchParams({ grant_type: "password", username: email, password });
-  try {
-    return await identityRequest(event, context, "token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: form.toString()
-    });
-  } catch (error) {
-    return identityRequest(event, context, "token?grant_type=password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-  }
-}
-
-async function identityRefresh(event, context, refreshToken) {
-  const form = new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken });
-  return identityRequest(event, context, "token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: form.toString()
-  });
-}
-
-async function identityUser(event, context, token) {
-  return identityRequest(event, context, "user", {
-    method: "GET",
-    token
-  });
-}
-
 function userIdFrom(user) {
   return user.id || user.sub || user.user_id;
 }
@@ -241,34 +164,127 @@ function identityAccountStatus(user) {
   return "pending_verification";
 }
 
+function stableHash(value) {
+  return crypto.createHash("sha256").update(String(value)).digest("hex");
+}
+
+function authUserOut(row) {
+  return {
+    id: row.id,
+    email: row.email,
+    user_metadata: row.user_metadata || {},
+    app_metadata: row.app_metadata || { plan: "free", roles: [] },
+    created_at: row.created_at,
+    last_login_at: row.last_login_at || "",
+    confirmed_at: row.confirmed_at || row.created_at,
+    account_status: row.account_status || "active"
+  };
+}
+
+function passwordHash(password) {
+  const salt = crypto.randomBytes(18).toString("base64url");
+  const hash = crypto.scryptSync(String(password), salt, 64).toString("base64url");
+  return `scrypt:${salt}:${hash}`;
+}
+
+function verifyPassword(password, storedHash = "") {
+  const [scheme, salt, expected] = String(storedHash).split(":");
+  if (scheme !== "scrypt" || !salt || !expected) return false;
+  const actual = crypto.scryptSync(String(password), salt, 64);
+  const expectedBuffer = Buffer.from(expected, "base64url");
+  return actual.length === expectedBuffer.length && crypto.timingSafeEqual(actual, expectedBuffer);
+}
+
+async function userByEmail(email) {
+  const lookup = await blobGetJson(`auth/email/${stableHash(email)}.json`);
+  if (!lookup?.user_id) return null;
+  return blobGetJson(`auth/users/${lookup.user_id}.json`);
+}
+
+async function createPasswordUser(email, password, displayName) {
+  const existing = await userByEmail(email);
+  if (existing) {
+    const error = new Error("Ein Account mit dieser E-Mail existiert bereits.");
+    error.statusCode = 409;
+    throw error;
+  }
+  const timestamp = now();
+  const row = {
+    id: crypto.randomUUID(),
+    email,
+    password_hash: passwordHash(password),
+    user_metadata: { display_name: displayName, full_name: displayName, email },
+    app_metadata: { plan: "free", roles: [] },
+    account_status: "active",
+    created_at: timestamp,
+    updated_at: timestamp,
+    confirmed_at: timestamp,
+    last_login_at: timestamp
+  };
+  await blobSetJson(`auth/users/${row.id}.json`, row);
+  await blobSetJson(`auth/email/${stableHash(email)}.json`, { user_id: row.id, email, created_at: timestamp });
+  return authUserOut(row);
+}
+
+async function authenticatePasswordUser(email, password) {
+  const row = await userByEmail(email);
+  if (!row || row.account_status === "suspended" || !verifyPassword(password, row.password_hash)) {
+    const error = new Error("E-Mail oder Passwort ist ungültig.");
+    error.statusCode = 401;
+    throw error;
+  }
+  const next = { ...row, last_login_at: now(), updated_at: now() };
+  await blobSetJson(`auth/users/${row.id}.json`, next);
+  return authUserOut(next);
+}
+
+async function createSession(userId) {
+  const token = crypto.randomBytes(36).toString("base64url");
+  const expiresIn = 60 * 60 * 24 * 14;
+  const timestamp = now();
+  await blobSetJson(`auth/sessions/${stableHash(token)}.json`, {
+    user_id: userId,
+    created_at: timestamp,
+    last_seen_at: timestamp,
+    expires_at: new Date(Date.now() + expiresIn * 1000).toISOString()
+  });
+  return { access_token: token, expires_in: expiresIn };
+}
+
+async function userFromSessionToken(token) {
+  const session = await blobGetJson(`auth/sessions/${stableHash(token)}.json`);
+  if (!session?.user_id || !session.expires_at || new Date(session.expires_at).getTime() <= Date.now()) {
+    const error = new Error("Authentication required.");
+    error.statusCode = 401;
+    throw error;
+  }
+  const row = await blobGetJson(`auth/users/${session.user_id}.json`);
+  if (!row) {
+    const error = new Error("Authentication required.");
+    error.statusCode = 401;
+    throw error;
+  }
+  await blobSetJson(`auth/sessions/${stableHash(token)}.json`, { ...session, last_seen_at: now() });
+  return authUserOut(row);
+}
+
 async function requireUser(event, context) {
   const cookies = parseCookies(event);
   const bearer = clean(event.headers.authorization || event.headers.Authorization).replace(/^Bearer\s+/i, "");
-  let accessToken = bearer || cookies[sessionCookieName];
-  const refreshToken = cookies[refreshCookieName];
-  let responseCookies = [];
+  const accessToken = bearer || cookies[sessionCookieName];
 
   if (context?.clientContext?.user && bearer) {
-    return { user: context.clientContext.user, userId: userIdFrom(context.clientContext.user), token: bearer, cookies: responseCookies };
+    return { user: context.clientContext.user, userId: userIdFrom(context.clientContext.user), token: bearer, cookies: [] };
   }
 
-  if (!accessToken && !refreshToken) {
+  if (!accessToken) {
     const error = new Error("Authentication required.");
     error.statusCode = 401;
     throw error;
   }
 
-  try {
-    const user = await identityUser(event, context, accessToken);
-    return { user, userId: userIdFrom(user), token: accessToken, cookies: responseCookies };
-  } catch (error) {
-    if (!refreshToken) throw error;
-    const session = await identityRefresh(event, context, refreshToken);
-    accessToken = session.access_token || session.token;
-    responseCookies = sessionCookies(event, session);
-    const user = await identityUser(event, context, accessToken);
-    return { user, userId: userIdFrom(user), token: accessToken, cookies: responseCookies };
-  }
+  const user = await userFromSessionToken(accessToken);
+  return { user, userId: userIdFrom(user), token: accessToken, cookies: [] };
 }
 
 function normalizedWebsite(value) {
@@ -649,7 +665,7 @@ function integrations() {
     openai: { configured: Boolean(openaiApiKey), model: openaiModel },
     netlify: {
       hosting: true,
-      identity: true,
+      identity: false,
       functions: true,
       blobs: true,
       forms: true,
@@ -922,7 +938,7 @@ exports.handler = async (event, context) => {
     const path = routePath(event);
 
     if (method === "GET" && path === "/api/health") {
-      return json(200, { ok: true, product: "DexHost", platform: "netlify", auth: "netlify-identity", storage: "netlify-blobs", functions: true, forms: true, deploys: integrations().netlify.deploys ? "configured" : "prepared" });
+      return json(200, { ok: true, product: "DexHost", platform: "netlify", auth: "netlify-functions-blobs", storage: "netlify-blobs", functions: true, forms: true, deploys: integrations().netlify.deploys ? "configured" : "prepared" });
     }
     if (method === "GET" && path === "/api/auth/csrf") return json(200, { csrfToken: csrfToken(event) }, [csrfCookie(event)]);
     if (method === "GET" && path === "/api/upload/config") return json(200, uploadConfig());
@@ -956,12 +972,11 @@ exports.handler = async (event, context) => {
       const password = String(body.password || "");
       const displayName = clean(body.displayName) || email;
       if (!email || password.length < 8) return json(400, { error: "Email and a password with at least 8 characters are required." });
-      const session = await identitySignup(event, context, email, password, displayName);
-      const user = session.user || session;
-      const cookies = session.access_token || session.token ? sessionCookies(event, session) : [];
-      if (user?.id) await ensureProfile({ user, userId: userIdFrom(user), token: session.access_token || session.token || "" });
-      const profile = user?.id ? profileOut(await ensureProfile({ user, userId: userIdFrom(user), token: session.access_token || session.token || "" }), user) : null;
-      return json(201, { user: user?.id ? { id: userIdFrom(user), email: userEmailFrom(user) || email } : null, profile, emailVerificationRequired: !cookies.length }, cookies);
+      const user = await createPasswordUser(email, password, displayName);
+      const session = await createSession(user.id);
+      const auth = { user, userId: user.id, token: session.access_token };
+      const profile = await ensureProfile(auth, { touchLastLogin: true });
+      return json(201, { authenticated: true, user: { id: auth.userId, email: userEmailFrom(user) || email }, profile: profileOut(profile, user), emailVerificationRequired: false }, sessionCookies(event, session));
     }
 
     if (method === "POST" && path === "/api/auth/login") {
@@ -969,9 +984,9 @@ exports.handler = async (event, context) => {
       const email = clean(body.email).toLowerCase();
       const password = String(body.password || "");
       if (!email || !password) return json(400, { error: "Email and password are required." });
-      const session = await identityLogin(event, context, email, password);
-      const user = session.user || await identityUser(event, context, session.access_token || session.token);
-      const auth = { user, userId: userIdFrom(user), token: session.access_token || session.token };
+      const user = await authenticatePasswordUser(email, password);
+      const session = await createSession(user.id);
+      const auth = { user, userId: user.id, token: session.access_token };
       const profile = await ensureProfile(auth, { touchLastLogin: true });
       return json(200, { authenticated: true, user: { id: auth.userId, email: userEmailFrom(user) || email }, profile: profileOut(profile, user) }, sessionCookies(event, session));
     }
@@ -979,12 +994,7 @@ exports.handler = async (event, context) => {
     if (method === "POST" && path === "/api/auth/forgot-password") {
       const email = clean(bodyJson(event).email).toLowerCase();
       if (!email) return json(400, { error: "Email is required." });
-      await identityRequest(event, context, "recover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      return json(200, { ok: true });
+      return json(200, { ok: true, message: "Passwort-Reset per E-Mail ist vorbereitet, aber noch nicht mit einem Mail-Anbieter verbunden." });
     }
 
     if (method === "POST" && path === "/api/auth/logout") {
