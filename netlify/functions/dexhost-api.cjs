@@ -26,7 +26,7 @@ const billingPlans = {
 const subscriptionPlanIds = {
   basic: process.env.PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   business: process.env.PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "",
-  pro: process.env.PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || ""
+  pro: process.env.PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
 };
 
 function json(statusCode, body, cookies = []) {
