@@ -94,13 +94,15 @@ NETLIFY_BUILD_HOOK_URL=
 PAYPAL_ENV=sandbox
 PAYPAL_CLIENT_ID=
 PAYPAL_CLIENT_SECRET=
+VITE_PAYPAL_HOSTED_CLIENT_ID=
+VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID=CB7H722RRFGF4
 DEXHOST_SUBDOMAIN_SUFFIX=dexhost.de
 IMAGE_UPLOAD_MAX_BYTES=5242880
 ```
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
-PayPal Checkout wird serverseitig ueber Functions gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen.
+PayPal Checkout wird serverseitig ueber Functions gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Zahlung leitet DexHost auf `/billing/success` zurueck und bestaetigt den Tarif serverseitig. PayPal Hosted Buttons koennen zusaetzlich ueber `VITE_PAYPAL_*_HOSTED_BUTTON_ID` angezeigt werden; fuer automatische Tarif-Freischaltung bleibt die serverseitige Checkout-/Capture-Route oder spaeter ein PayPal Webhook massgeblich.
 
 ## Entwicklung
 

@@ -103,11 +103,25 @@ type ExampleCase = {
   highlights: string[];
   pagePlan: Array<{ title: string; body: string }>;
 };
-type ProtectedRoute = { kind: "dashboard" | "profile" | "websites" | "new-website" | "editor" | "billing" | "publish"; websiteId?: string };
+type ProtectedRoute = { kind: "dashboard" | "profile" | "websites" | "new-website" | "editor" | "billing" | "billing-success" | "publish"; websiteId?: string };
+
+declare global {
+  interface Window {
+    paypal?: {
+      HostedButtons?: (options: { hostedButtonId: string }) => { render: (selector: string) => Promise<void> | void };
+    };
+  }
+}
 
 const uploadConfigDefault: UploadConfig = { allowedTypes: ["jpg", "jpeg", "png", "webp"], maxBytes: Number(import.meta.env.VITE_IMAGE_UPLOAD_MAX_BYTES || 5 * 1024 * 1024), configured: false };
 const pageOptions = ["Startseite", "Leistungen", "Über uns", "Referenzen", "Preise", "FAQ", "Kontakt", "Team", "Ablauf", "Galerie", "Impressum", "Datenschutz"];
 const requiredPages = new Set(["Startseite", "Kontakt"]);
+const hostedPayPalClientId = import.meta.env.VITE_PAYPAL_HOSTED_CLIENT_ID || "BAAAh0BwexhEqCc-x-aB7nAugoGa-LHMtpTifBYJ9xVvUftpbeU2w2St-LTa1AfgwOuoRX7pQCtgzunnMo";
+const hostedPayPalButtonIds: Partial<Record<AccountProfile["plan"], string>> = {
+  basic: import.meta.env.VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID || "CB7H722RRFGF4",
+  business: import.meta.env.VITE_PAYPAL_BUSINESS_HOSTED_BUTTON_ID || "",
+  pro: import.meta.env.VITE_PAYPAL_PRO_HOSTED_BUTTON_ID || ""
+};
 const emptyProfileForm: ProfileForm = {
   display_name: "",
   first_name: "",
@@ -514,6 +528,7 @@ function protectedRouteFor(pathname: string): ProtectedRoute | null {
   if (route === "/dashboard/websites") return { kind: "websites" };
   if (route === "/dashboard/websites/new") return { kind: "new-website" };
   if (route === "/billing") return { kind: "billing" };
+  if (route === "/billing/success") return { kind: "billing-success" };
   const editorMatch = route.match(/^\/editor\/([0-9a-f-]{36})$/i);
   if (editorMatch) return { kind: "editor", websiteId: editorMatch[1] };
   const publishMatch = route.match(/^\/publish\/([0-9a-f-]{36})$/i);
@@ -554,6 +569,29 @@ function cleanLabel(value = "") {
 function pageSummary(value = "") {
   return briefPages(value).join(", ");
 }
+
+let paypalHostedSdkPromise: Promise<void> | null = null;
+function ensurePayPalHostedSdk() {
+  if (window.paypal?.HostedButtons) return Promise.resolve();
+  if (paypalHostedSdkPromise) return paypalHostedSdkPromise;
+  paypalHostedSdkPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById("paypal-hosted-buttons-sdk") as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("PayPal konnte nicht geladen werden.")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "paypal-hosted-buttons-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(hostedPayPalClientId)}&components=hosted-buttons&disable-funding=venmo&currency=EUR`;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("PayPal konnte nicht geladen werden."));
+    document.head.appendChild(script);
+  });
+  return paypalHostedSdkPromise;
+}
+
 function designFor(brief: Brief) {
   const text = `${brief.industry} ${brief.style} ${brief.colorPreference}`.toLowerCase();
   if (/medizin|arzt|health|clinic|pflege/.test(text)) return designSystems[1];
@@ -694,6 +732,7 @@ function AppRoutes() {
   const isAuthRoute = route === "/login" || route === "/register";
   const isProfileRoute = protectedRoute?.kind === "profile";
   const isBillingRoute = protectedRoute?.kind === "billing";
+  const isBillingSuccessRoute = protectedRoute?.kind === "billing-success";
   const isPublishRoute = protectedRoute?.kind === "publish";
 
   useEffect(() => {
@@ -1085,14 +1124,14 @@ function AppRoutes() {
       setSession((current) => current ? { ...current, profile: response.profile } : current);
       setProfileForm(toProfileForm(response.profile));
       setBillingStatus(`PayPal bestätigt. Tarif ${response.plan} ist aktiv.`);
-      routerNavigate("/billing", { replace: true });
+      routerNavigate("/billing/success", { replace: true });
     } catch (error) {
       setBillingStatus(error instanceof Error ? error.message : "PayPal-Zahlung konnte nicht bestätigt werden.");
     }
   }
 
   useEffect(() => {
-    if (!session || route !== "/billing") return;
+    if (!session || (route !== "/billing" && route !== "/billing/success")) return;
     const params = new URLSearchParams(search);
     const orderId = params.get("token");
     if (params.get("paypal") === "success" && orderId) void capturePayPalOrder(orderId);
@@ -1131,7 +1170,7 @@ function AppRoutes() {
             (targetPath === "/dashboard" && route === "/dashboard") ||
             (targetPath === "/dashboard/websites" && (route === "/dashboard/websites" || route.startsWith("/editor/"))) ||
             (targetPath === "/dashboard/websites/new" && route === "/dashboard/websites/new") ||
-            (targetPath === "/billing" && route === "/billing") ||
+            (targetPath === "/billing" && (route === "/billing" || route === "/billing/success")) ||
             (targetPath === "/dashboard/profile" && isProfileRoute) ||
             (targetPath.startsWith("/publish/") && route.startsWith("/publish/"));
           return <button className={active ? "active" : ""} key={label} onClick={() => { if (targetPath === "/dashboard/profile") void loadProfile(); navigate(targetPath); }}><Icon name={icon as "studio"} />{label}</button>;
@@ -1171,6 +1210,15 @@ function AppRoutes() {
       <main className="app-shell route-transition">
         {sidebar}
         <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} onBack={() => navigate("/dashboard")} onCheckout={(plan) => void startPayPalCheckout(plan)} />
+      </main>
+    );
+  }
+
+  if (isBillingSuccessRoute) {
+    return (
+      <main className="app-shell route-transition">
+        {sidebar}
+        <PaymentSuccessPage profile={session.profile} status={billingStatus} onBilling={() => navigate("/billing")} onDashboard={() => navigate("/dashboard")} />
       </main>
     );
   }
@@ -1545,7 +1593,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
       <section className="pricing-faq">
         {[
           ["Kann ich alles selbst einrichten?", "Ja. DexHost ist so gebaut, dass Nutzer Texte, Bilder, Farben, Sections, SEO und Publishing selbst steuern können."],
-          ["Kann ich später upgraden?", "Ja. Planrechte werden nicht im Frontend gespeichert, sondern serverseitig geprüft und können später sauber mit Stripe verbunden werden."],
+          ["Kann ich später upgraden?", "Ja. Planrechte werden nicht im Frontend gespeichert, sondern serverseitig geprüft und über PayPal bestätigt."],
           ["Warum gibt es trotzdem Setup-Services?", "Manche Kunden wollen Zeit sparen oder einen geführten Launch. Deshalb ist Einrichtung optional und nicht Voraussetzung."]
         ].map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}
       </section>
@@ -1559,6 +1607,84 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         </nav>
       </footer>
     </main>
+  );
+}
+
+function PayPalHostedButton({ planName, hostedButtonId }: { planName: string; hostedButtonId: string }) {
+  const containerId = useMemo(() => `paypal-container-${hostedButtonId}`, [hostedButtonId]);
+  const [status, setStatus] = useState("PayPal Button wird geladen...");
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("PayPal Button wird geladen...");
+    void ensurePayPalHostedSdk()
+      .then(() => {
+        if (cancelled) return undefined;
+        const container = document.getElementById(containerId);
+        const hostedButton = window.paypal?.HostedButtons?.({ hostedButtonId });
+        if (!container || !hostedButton) throw new Error("PayPal Hosted Button ist nicht verfügbar.");
+        container.innerHTML = "";
+        return Promise.resolve(hostedButton.render(`#${containerId}`));
+      })
+      .then(() => {
+        if (!cancelled) setStatus("");
+      })
+      .catch((error) => {
+        if (!cancelled) setStatus(error instanceof Error ? error.message : "PayPal Button konnte nicht geladen werden.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [containerId, hostedButtonId]);
+
+  return (
+    <div className="paypal-hosted-box">
+      <div className="paypal-hosted-head">
+        <strong>PayPal Hosted Button</strong>
+        <span>{planName}</span>
+      </div>
+      <div id={containerId} className="paypal-hosted-container" />
+      {status && <small>{status}</small>}
+    </div>
+  );
+}
+
+function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profile: AccountProfile; status: string; onBilling: () => void; onDashboard: () => void }) {
+  const isConfirmed = status.includes("bestätigt") || status.includes("aktiv") || ["basic", "business", "pro", "admin"].includes(profile.plan);
+  return (
+    <section className="workspace account-page payment-success-page">
+      <header className="topbar">
+        <div><strong>Zahlung abgeschlossen</strong><span>/billing/success</span></div>
+        <div className="status-row"><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span><span>Server geprüft</span></div>
+      </header>
+      <section className="account-hero payment-success-hero">
+        <div>
+          <span className={isConfirmed ? "success-pill" : "success-pill pending"}>{isConfirmed ? "Bestätigt" : "Wird geprüft"}</span>
+          <h1>{isConfirmed ? "Dein Tarif ist aktiv." : "Zahlung wird geprüft."}</h1>
+          <p>{isConfirmed ? "PayPal wurde serverseitig bestätigt. Du kannst jetzt zurück ins Studio und die freigeschalteten DexHost-Funktionen nutzen." : "Falls PayPal dich gerade zurückgeleitet hat, prüft DexHost die Zahlung im Hintergrund. Lade die Seite nicht mehrfach neu."}</p>
+        </div>
+        <div className="account-actions">
+          <button onClick={onBilling}>Tarife ansehen</button>
+          <button className="primary" onClick={onDashboard}>Dashboard öffnen</button>
+        </div>
+      </section>
+      {status && <p className={isConfirmed ? "form-message success" : "form-message error"}>{status}</p>}
+      <section className="profile-grid">
+        <article className="profile-card">
+          <h2>Nächster Schritt</h2>
+          <p className="empty-note">Öffne dein Dashboard, erstelle eine Website oder veröffentliche ein vorhandenes Projekt, wenn dein Tarif Publishing erlaubt.</p>
+          <button className="primary" onClick={onDashboard}>Zum Dashboard</button>
+        </article>
+        <article className="profile-card">
+          <h2>Aktueller Account</h2>
+          <dl className="account-facts">
+            <dt>E-Mail</dt><dd>{profile.email}</dd>
+            <dt>Tarif</dt><dd>{profile.plan}</dd>
+            <dt>Account-Status</dt><dd>{profile.account_status}</dd>
+          </dl>
+        </article>
+      </section>
+    </section>
   );
 }
 
@@ -1589,6 +1715,7 @@ function BillingPage({ profile, status, loadingPlan, onBack, onCheckout }: { pro
             <h2>{plan.name}</h2>
             <strong>{plan.monthly} / Monat</strong>
             <p className="empty-note">{plan.description}</p>
+            {hostedPayPalButtonIds[plan.id] && <PayPalHostedButton planName={plan.name} hostedButtonId={hostedPayPalButtonIds[plan.id] || ""} />}
             <button className={plan.featured ? "primary" : ""} disabled={profile.plan === plan.id || Boolean(loadingPlan)} onClick={() => onCheckout(plan.id)}>
               {profile.plan === plan.id ? "Aktueller Tarif" : loadingPlan === plan.id ? "PayPal wird geöffnet..." : "Mit PayPal wählen"}
             </button>

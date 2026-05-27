@@ -1047,7 +1047,7 @@ async function createPayPalOrder(auth, event, plan) {
         brand_name: "DexHost",
         landing_page: "LOGIN",
         user_action: "PAY_NOW",
-        return_url: `${origin}/billing?paypal=success`,
+        return_url: `${origin}/billing/success?paypal=success`,
         cancel_url: `${origin}/billing?paypal=cancel`
       }
     }
