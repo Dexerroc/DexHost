@@ -70,6 +70,19 @@ type AuthForm = { email: string; password: string; displayName: string };
 type ProfileForm = Omit<AccountProfile, "id" | "email" | "plan" | "account_status" | "created_at" | "updated_at" | "last_login_at">;
 type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "impressum" | "datenschutz";
 type PublicPageContent = { navLabel: string; title: string; intro: string; proof: string[]; sections: Array<{ title: string; body: string }> };
+type PricingPlan = {
+  id: AccountProfile["plan"];
+  name: string;
+  badge: string;
+  setup: string;
+  monthly: string;
+  description: string;
+  audience: string;
+  features: string[];
+  limits: string[];
+  cta: string;
+  featured?: boolean;
+};
 type ExampleCase = {
   slug: string;
   title: string;
@@ -228,6 +241,58 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     ]
   }
 };
+
+const pricingPlans: PricingPlan[] = [
+  {
+    id: "free",
+    name: "Free",
+    badge: "Zum Ausprobieren",
+    setup: "0 EUR",
+    monthly: "0 EUR",
+    description: "Für erste Entwürfe, Briefings und interne Tests im DexHost Studio.",
+    audience: "Ideal, wenn du Designrichtung, Struktur und Inhalte erst sauber vorbereiten willst.",
+    features: ["KI-Briefing und Website-Struktur", "Block-Editor mit Layout-Varianten", "Farben, Texte und SEO bearbeiten", "Eigene Bilder im Entwurf testen"],
+    limits: ["Kein öffentliches Publishing", "Keine eigene Domain", "DexHost Wasserzeichen in Vorschauen"],
+    cta: "Kostenlos starten"
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    badge: "Für den ersten Launch",
+    setup: "149 EUR",
+    monthly: "19 EUR",
+    description: "Für kleine Firmen, lokale Anbieter und Selbstständige, die schnell professionell online gehen wollen.",
+    audience: "Gute Wahl für klare Onepager oder kompakte Firmenwebsites mit eigener Subdomain.",
+    features: ["Alles aus Free", "Publishing auf DexHost Subdomain", "SSL automatisch", "Kontaktformular über Netlify Forms", "Bis zu 3 Websites", "Bis zu 250 MB Bildspeicher"],
+    limits: ["Eigene Domain nicht enthalten", "Basis-Support per E-Mail"],
+    cta: "Basic starten"
+  },
+  {
+    id: "business",
+    name: "Business",
+    badge: "Beliebt",
+    setup: "349 EUR",
+    monthly: "49 EUR",
+    description: "Für Firmenwebsites mit stärkerem Branding, mehr Seiten, mehr Assets und professioneller Außenwirkung.",
+    audience: "Für Kanzleien, Praxen, Agenturen, Immobilienanbieter, Handwerk und wachsende Dienstleister.",
+    features: ["Alles aus Basic", "Eigene Domain vorbereiten", "Mehrseitige Website-Struktur", "Erweiterte Branding-Farben", "Canva-/Asset-Briefings", "Bis zu 10 Websites", "Bis zu 2 GB Bildspeicher"],
+    limits: ["Domainkosten extern", "Individuelle Texte nach Aufwand"],
+    cta: "Business wählen",
+    featured: true
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    badge: "Für Agentur-Niveau",
+    setup: "799 EUR",
+    monthly: "99 EUR",
+    description: "Für hochwertige Markenauftritte mit mehreren Landingpages, Premium-Assets und stärkerem Designsystem.",
+    audience: "Für Teams, Anbieter mit Kampagnenbedarf und Kunden, die einen sehr individuellen Auftritt wollen.",
+    features: ["Alles aus Business", "Priorisierte Designvorschläge", "Mehrere Landingpages", "Erweiterte Asset-Liste", "Trust-Elemente und Vergleichssections", "Bis zu 25 Websites", "Bis zu 10 GB Bildspeicher"],
+    limits: ["Externe Lizenzen separat", "Custom-Integrationen nach Angebot"],
+    cta: "Pro anfragen"
+  }
+];
 
 const exampleCases: ExampleCase[] = [
   {
@@ -1292,6 +1357,7 @@ function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: Pu
   const isContact = pageKey === "contact";
   const isExamples = pageKey === "examples";
   const featuredExamplePath = `/examples/${exampleCases[0].slug}`;
+  if (pageKey === "pricing") return <PricingPage session={session} currentPath={currentPath} onNavigate={onNavigate} />;
   return (
     <main className="public-shell route-transition">
       <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
@@ -1335,6 +1401,90 @@ function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: Pu
           <button onClick={() => onNavigate("/impressum")}>Impressum</button>
           <button onClick={() => onNavigate("/datenschutz")}>Datenschutz</button>
           <button onClick={() => onNavigate("/login")}>Einloggen</button>
+        </nav>
+      </footer>
+    </main>
+  );
+}
+
+function PricingPage({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
+  const billingTarget = session ? "/billing" : "/register";
+  return (
+    <main className="public-shell pricing-shell route-transition">
+      <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
+      <section className="pricing-hero">
+        <div>
+          <span className="pricing-kicker">DexHost Preise</span>
+          <h1>Professionelles AI Website Studio mit klaren Tarifen.</h1>
+          <p>Starte kostenlos mit Entwurf und Editor. Publishing, Domains, Speicher und Premium-Funktionen werden serverseitig über den aktiven Tarif freigeschaltet.</p>
+          <div className="public-cta-row">
+            <button className="primary" onClick={() => onNavigate("/register")}>Kostenlos starten</button>
+            <button onClick={() => onNavigate(session ? "/dashboard" : "/login")}>Baukasten öffnen</button>
+          </div>
+        </div>
+        <aside className="pricing-note">
+          <strong>Transparenz vor Vertragsbindung</strong>
+          <p>Alle Preise verstehen sich zzgl. USt. Domainkosten, externe Lizenzen und individuelle Sonderwünsche werden separat ausgewiesen.</p>
+          <span>Serverseitige Planprüfung über Netlify Functions</span>
+        </aside>
+      </section>
+
+      <section className="pricing-band">
+        <div className="public-section-head">
+          <h2>Tarife</h2>
+          <p>Vom kostenlosen Entwurf bis zur veröffentlichbaren Firmenwebsite mit eigener Domain und professionellem Asset-Workflow.</p>
+        </div>
+        <div className="pricing-grid">
+          {pricingPlans.map((plan) => (
+            <article className={plan.featured ? "pricing-card featured" : "pricing-card"} key={plan.id}>
+              <div className="pricing-card-head">
+                <span>{plan.badge}</span>
+                <h3>{plan.name}</h3>
+                <p>{plan.description}</p>
+              </div>
+              <div className="pricing-money">
+                <div><small>Einrichtung</small><strong>{plan.setup}</strong></div>
+                <div><small>Monatlich</small><strong>{plan.monthly}</strong></div>
+              </div>
+              <p className="pricing-audience">{plan.audience}</p>
+              <ul className="pricing-feature-list">
+                {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
+              </ul>
+              <button className={plan.featured ? "primary" : ""} onClick={() => onNavigate(plan.id === "free" ? "/register" : billingTarget)}>{plan.cta}</button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="pricing-compare">
+        <div>
+          <h2>Was ist enthalten?</h2>
+          <p>Die Limits sind bewusst einfach gehalten, damit der MVP schlank bleibt und später sauber mit Stripe erweitert werden kann.</p>
+        </div>
+        <div className="pricing-table">
+          {pricingPlans.map((plan) => (
+            <article key={plan.id}>
+              <h3>{plan.name}</h3>
+              {plan.limits.map((item) => <p key={item}>{item}</p>)}
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="pricing-faq">
+        {[
+          ["Kann ich kostenlos starten?", "Ja. Free reicht für Entwurf, Struktur, Texte und Editor-Test. Öffentliches Publishing braucht einen aktiven Paid-Plan."],
+          ["Kann ich später upgraden?", "Ja. Planrechte werden nicht im Frontend gespeichert, sondern serverseitig geprüft und können später sauber mit Stripe verbunden werden."],
+          ["Sind eigene Domains möglich?", "Ja, ab Business vorbereitet. DNS und SSL laufen über Netlify, Domainkosten bleiben separat."]
+        ].map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}
+      </section>
+
+      <footer className="public-footer">
+        <strong>DexHost</strong>
+        <nav>
+          <button onClick={() => onNavigate("/examples")}>Beispiele</button>
+          <button onClick={() => onNavigate("/faq")}>FAQ</button>
+          <button onClick={() => onNavigate("/contact")}>Kontakt</button>
         </nav>
       </footer>
     </main>

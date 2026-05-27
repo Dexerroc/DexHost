@@ -374,6 +374,240 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   margin: 0 0 .55rem;
   font-size: 1.15rem;
 }
+.pricing-shell {
+  background: #f7f8f4;
+}
+.pricing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, .78fr) minmax(18rem, .34fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: end;
+  padding: clamp(3rem, 7vw, 6.5rem) max(1rem, calc((100vw - 1180px) / 2));
+  color: #f8fbff;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(135deg, #090d13 0%, #16211e 58%, #4a3824 100%);
+  background-size: 46px 46px, auto;
+}
+.pricing-kicker {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(143, 211, 204, .24);
+  border-radius: 999px;
+  background: rgba(143, 211, 204, .09);
+  color: #d8fffb;
+  padding: .5rem .74rem;
+  font-weight: 900;
+}
+.pricing-hero h1 {
+  max-width: 11ch;
+  margin: 1.1rem 0;
+  font-size: clamp(3rem, 6vw, 5.6rem);
+  line-height: .92;
+  letter-spacing: 0;
+}
+.pricing-hero p {
+  max-width: 47rem;
+  margin: 0 0 1.2rem;
+  color: #c2cddd;
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+.pricing-note {
+  display: grid;
+  gap: .8rem;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 14px;
+  background: rgba(255,255,255,.08);
+  padding: 1.1rem;
+  box-shadow: 0 24px 70px rgba(0,0,0,.26);
+}
+.pricing-note strong {
+  font-size: 1.15rem;
+}
+.pricing-note p {
+  margin: 0;
+  font-size: .92rem;
+}
+.pricing-note span {
+  border-top: 1px solid rgba(255,255,255,.14);
+  color: #d8fffb;
+  padding-top: .75rem;
+  font-weight: 900;
+}
+.pricing-band, .pricing-compare, .pricing-faq {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  color: #101820;
+  padding: clamp(3rem, 6vw, 5.8rem) 0;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .9rem;
+  align-items: stretch;
+}
+.pricing-card {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 1rem;
+  min-height: 36rem;
+  border: 1px solid rgba(16, 24, 32, .12);
+  border-radius: 10px;
+  background: #fff;
+  padding: 1.05rem;
+  box-shadow: 0 18px 44px rgba(16,24,32,.08);
+}
+.pricing-card.featured {
+  border-color: rgba(181, 139, 82, .5);
+  background: #101820;
+  color: #f8fbff;
+  box-shadow: 0 30px 80px rgba(16,24,32,.22);
+}
+.pricing-card-head {
+  display: grid;
+  gap: .6rem;
+}
+.pricing-card-head span {
+  width: fit-content;
+  border: 1px solid rgba(16, 24, 32, .12);
+  border-radius: 999px;
+  background: #f2f5f1;
+  color: #52605e;
+  padding: .42rem .62rem;
+  font-size: .78rem;
+  font-weight: 900;
+}
+.pricing-card.featured .pricing-card-head span {
+  border-color: rgba(244, 184, 106, .34);
+  background: rgba(244, 184, 106, .12);
+  color: #ffe1b2;
+}
+.pricing-card h3 {
+  margin: 0;
+  font-size: 1.65rem;
+}
+.pricing-card p {
+  margin: 0;
+  color: #52605e;
+  line-height: 1.6;
+}
+.pricing-card.featured p {
+  color: #c9d4e2;
+}
+.pricing-money {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .6rem;
+}
+.pricing-money div {
+  border: 1px solid rgba(16, 24, 32, .1);
+  border-radius: 8px;
+  background: #f7f8f4;
+  padding: .75rem;
+}
+.pricing-card.featured .pricing-money div {
+  border-color: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.07);
+}
+.pricing-money small {
+  display: block;
+  color: #6f7d7a;
+  font-weight: 900;
+}
+.pricing-money strong {
+  display: block;
+  margin-top: .25rem;
+  font-size: 1.55rem;
+}
+.pricing-audience {
+  font-size: .93rem;
+}
+.pricing-feature-list {
+  display: grid;
+  align-content: start;
+  gap: .58rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pricing-feature-list li {
+  position: relative;
+  padding-left: 1.2rem;
+  color: #1e2b29;
+  line-height: 1.45;
+}
+.pricing-card.featured .pricing-feature-list li {
+  color: #edf5ff;
+}
+.pricing-feature-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .45rem;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 999px;
+  background: #4ccbc0;
+}
+.pricing-card button {
+  min-height: 2.8rem;
+  border: 1px solid rgba(16, 24, 32, .14);
+  border-radius: 10px;
+  background: #fff;
+  color: #101820;
+  font-weight: 900;
+}
+.pricing-card button.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #d4fbff, #4ccbc0 55%, #f4b86a);
+}
+.pricing-compare {
+  display: grid;
+  grid-template-columns: minmax(0, .34fr) minmax(0, .66fr);
+  gap: 1rem;
+  align-items: start;
+  border-top: 1px solid rgba(16, 24, 32, .1);
+}
+.pricing-compare h2 {
+  margin: 0 0 .8rem;
+  font-size: clamp(2.1rem, 4vw, 4rem);
+  line-height: .95;
+}
+.pricing-compare p {
+  margin: 0;
+  color: #52605e;
+  line-height: 1.65;
+}
+.pricing-table {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+.pricing-table article, .pricing-faq article {
+  border: 1px solid rgba(16, 24, 32, .1);
+  border-radius: 8px;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 16px 34px rgba(16,24,32,.06);
+}
+.pricing-table h3, .pricing-faq h3 {
+  margin: 0 0 .7rem;
+}
+.pricing-table p + p {
+  margin-top: .45rem;
+}
+.pricing-faq {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+  padding-top: 0;
+}
+.pricing-faq p {
+  margin: 0;
+  color: #52605e;
+  line-height: 1.65;
+}
 .text-link {
   justify-self: start;
   min-height: 2.45rem;
@@ -1469,7 +1703,8 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
 
 @media (max-width: 1180px) {
   .app-shell, .studio-layout, .page-title, .brief-grid, .account-strip, .profile-grid, .profile-fields.two, .profile-fields.three, .brand-upload-row { grid-template-columns: 1fr; }
-  .public-nav, .public-hero, .public-section-head, .public-card-grid, .example-showcase, .example-showcase.is-reversed, .example-detail-hero, .example-detail-band, .example-story-grid { grid-template-columns: 1fr; }
+  .public-nav, .public-hero, .public-section-head, .public-card-grid, .pricing-hero, .pricing-grid, .pricing-compare, .pricing-faq, .example-showcase, .example-showcase.is-reversed, .example-detail-hero, .example-detail-band, .example-story-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .example-showcase.is-reversed .example-showcase-copy { order: 0; }
   .public-nav nav, .public-actions { justify-content: flex-start; }
   .public-hero { min-height: auto; }
@@ -1500,6 +1735,9 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
   .visual-grid aside { display: none; }
   .example-detail-copy h1 { font-size: 3rem; }
   .example-showcase-copy h3 { font-size: 3rem; }
+  .pricing-grid, .pricing-table, .pricing-faq, .pricing-money { grid-template-columns: 1fr; }
+  .pricing-hero h1 { max-width: calc(100vw - 2rem); font-size: 3rem; }
+  .pricing-card { min-height: auto; }
   .example-showcase-details div { grid-template-columns: 1fr; gap: .25rem; }
   .live-site-nav { align-items: flex-start; flex-direction: column; }
   .live-site-nav nav { justify-content: flex-start; }
