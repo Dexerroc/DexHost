@@ -1326,7 +1326,7 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   color: #f8fbff;
   font-size: 1.55rem;
 }
-.paypal-hosted-box {
+.paypal-subscription-box {
   display: grid;
   gap: .65rem;
   border: 1px solid rgba(143, 211, 204, .18);
@@ -1334,7 +1334,7 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   background: rgba(4, 8, 14, .38);
   padding: .75rem;
 }
-.paypal-hosted-head {
+.paypal-subscription-head {
   display: flex;
   justify-content: space-between;
   gap: .65rem;
@@ -1342,12 +1342,22 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   color: #dce8f6;
   font-size: .82rem;
 }
-.paypal-hosted-head span {
+.paypal-subscription-head span {
   color: #8fd3cc;
   font-weight: 900;
 }
-.paypal-hosted-container {
+.paypal-subscription-container {
   min-height: 2.7rem;
+}
+.billing-plan-missing {
+  border: 1px solid rgba(248, 200, 113, .22);
+  border-radius: 10px;
+  background: rgba(248, 200, 113, .09);
+  color: #ffe7b0;
+  margin: 0;
+  padding: .8rem;
+  line-height: 1.45;
+  font-weight: 800;
 }
 .payment-success-page {
   align-content: start;

@@ -95,13 +95,11 @@ PAYPAL_ENV=sandbox
 PAYPAL_CLIENT_ID=
 PAYPAL_CLIENT_SECRET=
 PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID=P-78459601WB512822ENILXPCQ
+PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID=
 PAYPAL_PRO_SUBSCRIPTION_PLAN_ID=P-37230392XM0019717NILXOXA
-VITE_PAYPAL_HOSTED_CLIENT_ID=
-VITE_PAYPAL_BASIC_HOSTED_BUTTON_ID=
-VITE_PAYPAL_BUSINESS_HOSTED_BUTTON_ID=WZWUYYJ64HKL6
-VITE_PAYPAL_PRO_HOSTED_BUTTON_ID=FGAXLRWFW2CZN
 VITE_PAYPAL_SUBSCRIPTION_CLIENT_ID=AYpTUnN15JcpJNpAl_EoTNHh87Ad2tJXqeikN2oWVRLgozIw9NFewlNCnqtj--eC24WFQAnMU7eXm-VM
 VITE_PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID=P-78459601WB512822ENILXPCQ
+VITE_PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID=
 VITE_PAYPAL_PRO_SUBSCRIPTION_PLAN_ID=P-37230392XM0019717NILXOXA
 DEXHOST_SUBDOMAIN_SUFFIX=dexhost.de
 IMAGE_UPLOAD_MAX_BYTES=5242880
@@ -109,7 +107,7 @@ IMAGE_UPLOAD_MAX_BYTES=5242880
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
-PayPal Checkout wird serverseitig ueber Functions gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Zahlung leitet DexHost auf `/billing/success` zurueck und bestaetigt den Tarif serverseitig. Basic nutzt einen PayPal Subscription Button und aktiviert den Tarif erst nach serverseitiger Pruefung der Abo-ID. PayPal Hosted Buttons koennen zusaetzlich ueber `VITE_PAYPAL_*_HOSTED_BUTTON_ID` angezeigt werden; fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
+PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
 
 ## Entwicklung
 
