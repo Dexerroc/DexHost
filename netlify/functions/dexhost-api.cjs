@@ -1,6 +1,7 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const pathModule = require("node:path");
+const { connectLambda, getStore } = require("@netlify/blobs");
 
 const openaiApiKey = process.env.OPENAI_API_KEY || "";
 const openaiModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -404,7 +405,6 @@ function localPath(storeName, key, extension) {
 
 async function withStore(storeName, action, fallback) {
   try {
-    const { getStore } = await import("@netlify/blobs");
     const siteID = clean(process.env.NETLIFY_SITE_ID || process.env.SITE_ID);
     const token = clean(process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN);
     try {
@@ -427,7 +427,6 @@ async function withStore(storeName, action, fallback) {
 
 async function connectBlobs(event) {
   try {
-    const { connectLambda } = await import("@netlify/blobs");
     if (typeof connectLambda === "function") connectLambda(event);
   } catch {
     // Explicit NETLIFY_SITE_ID + NETLIFY_API_TOKEN still works without lambda context.
