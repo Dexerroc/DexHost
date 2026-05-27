@@ -31,6 +31,13 @@ function json(statusCode, body, cookies = []) {
   return response;
 }
 
+function publicErrorMessage(error) {
+  return String(error?.message || "Server error")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [redacted]")
+    .replace(/(token=)[^&\s]+/gi, "$1[redacted]")
+    .slice(0, 420);
+}
+
 function binary(statusCode, buffer, contentType, cache = "private, no-store") {
   return {
     statusCode,
@@ -1136,6 +1143,6 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error("DexHost API error", { message: error.message, statusCode: error.statusCode, stack: error.stack });
     const statusCode = error.statusCode || (/Authentication required/i.test(error.message) ? 401 : 500);
-    return json(statusCode, { error: statusCode === 500 ? "Server error" : error.message, detail: process.env.NODE_ENV === "development" ? error.message : undefined });
+    return json(statusCode, { error: statusCode === 500 ? publicErrorMessage(error) : error.message, detail: process.env.NODE_ENV === "development" ? error.message : undefined });
   }
 };
