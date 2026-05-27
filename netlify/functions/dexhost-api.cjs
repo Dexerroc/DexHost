@@ -166,7 +166,9 @@ async function identityRequest(event, context, endpoint, options = {}) {
     data = { message: text || "Netlify Identity returned a non-JSON response." };
   }
   if (!response.ok) {
-    const error = new Error(data.msg || data.error_description || data.error || data.message || "Netlify Identity request failed.");
+    const message = data.msg || data.error_description || data.error || data.message || "Netlify Identity request failed.";
+    const identityMissing = response.status === 404 && /<!doctype html|page not found/i.test(String(message));
+    const error = new Error(identityMissing ? "Netlify Identity ist für diese Site noch nicht aktiviert. Aktiviere Identity in Netlify und deploye danach erneut." : message);
     error.statusCode = response.status === 400 ? 401 : response.status;
     throw error;
   }
@@ -910,6 +912,8 @@ async function publishWebsite(auth, websiteId) {
   const deploy = await triggerNetlifyDeploy(row);
   return { row, deploy };
 }
+
+exports.config = { path: "/api/*" };
 
 exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return json(204, {});

@@ -605,7 +605,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, { ...options, credentials: "include", headers });
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
-    if (path.startsWith("/api/")) throw new Error("Netlify Functions sind lokal nicht aktiv. Nutze netlify dev für API-Flows.");
+    if (path.startsWith("/api/")) throw new Error("Die DexHost API ist nicht erreichbar. Prüfe in Netlify, ob Functions deployed sind und Identity aktiviert ist.");
     throw new Error("Unexpected response type.");
   }
   const data = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
