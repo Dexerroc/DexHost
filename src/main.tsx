@@ -191,7 +191,7 @@ const emptyProfileForm: ProfileForm = {
 };
 
 const sectionTypes: SectionType[] = ["hero", "about", "services", "pricing", "gallery", "testimonials", "faq", "contact", "team", "process", "beforeAfter", "cta", "footer"];
-const sectionLabels: Record<SectionType, string> = { hero: "Hero", about: "About", services: "Services", pricing: "Pricing", gallery: "Gallery", testimonials: "Testimonials", faq: "FAQ", contact: "Contact", team: "Team", process: "Process", beforeAfter: "Before/After", cta: "CTA", footer: "Footer" };
+const sectionLabels: Record<SectionType, string> = { hero: "Hero", about: "Über uns", services: "Leistungen", pricing: "Preise", gallery: "Galerie", testimonials: "Stimmen", faq: "FAQ", contact: "Kontakt", team: "Team", process: "Ablauf", beforeAfter: "Vorher/Nachher", cta: "Handlungsaufruf", footer: "Fußzeile" };
 const sectionVariants: Record<SectionType, string[]> = {
   hero: ["editorial-split", "cinematic", "center-stage", "product-panel"],
   about: ["founder-story", "mission-grid", "timeline", "profile"],
@@ -220,34 +220,34 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
   home: {
     navLabel: "Start",
     title: "AI Website Studio für Firmenwebsites mit eigener Handschrift.",
-    intro: "DexHost verbindet KI-Entwurf, professionellen Block-Editor und Netlify-Publishing. Besucher können Angebot und Beispiele ansehen, ein Account wird erst beim Öffnen des Baukastens gebraucht.",
-    proof: ["Öffentliche Seiten ohne Login", "Editor nur nach Session-Check", "Netlify Functions und Blobs"],
+    intro: "DexHost verbindet KI-Entwurf, professionellen Block-Editor und sichere Veröffentlichung. Besucher können Angebot und Beispiele ansehen, ein Konto wird erst beim Öffnen des Baukastens gebraucht.",
+    proof: ["Öffentliche Seiten ohne Anmeldung", "Editor nur nach sicherer Prüfung", "Speicher und Funktionen vorbereitet"],
     sections: [
-      { title: "Design mit Kontrolle", body: "Die KI erstellt Struktur, Varianten, Farben und Texte. Der Nutzer entscheidet anschließend über Sections, Layouts, Bilder, SEO und Publishing." },
+      { title: "Design mit Kontrolle", body: "Die KI erstellt Struktur, Varianten, Farben und Texte. Der Nutzer entscheidet anschließend über Abschnitte, Layouts, Bilder, SEO und Veröffentlichung." },
       { title: "Keine Gleichförmigkeit", body: "Section-Reihenfolge, Bildpositionen, Typografie und Designsystem werden kombiniert, damit Websites nicht wie dieselbe Vorlage wirken." },
-      { title: "Schlanker MVP-Stack", body: "Hosting, Login, Funktionen, Speicher, Forms und Deploys sind auf Netlify vorbereitet." }
+      { title: "Schlanker MVP-Stack", body: "Hosting, Anmeldung, Funktionen, Speicher, Formulare und Veröffentlichungen sind vorbereitet." }
     ]
   },
   pricing: {
     navLabel: "Preise",
     title: "Tarife, die klein starten und professionell wachsen.",
-    intro: "Der kostenlose Einstieg eignet sich für Entwurf und Bearbeitung. Publishing und eigene Domains werden serverseitig freigeschaltet.",
+    intro: "Der kostenlose Einstieg eignet sich für Entwurf und Bearbeitung. Veröffentlichung und eigene Domains werden serverseitig freigeschaltet.",
     proof: ["Free zum Starten", "Basic zum Launch", "Business und Pro für Teams"],
     sections: [
       { title: "Free", body: "Website planen, AI-Struktur erzeugen und den Editor testen." },
-      { title: "Basic", body: "Subdomain-Publishing, SSL und laufende Bearbeitung." },
+      { title: "Basic", body: "Subdomain-Veröffentlichung, sichere Verbindung und laufende Bearbeitung." },
       { title: "Business / Pro", body: "Eigene Domains, mehr Assets, erweitertes Branding und priorisierte Workflows." }
     ]
   },
   features: {
-    navLabel: "Features",
+    navLabel: "Funktionen",
     title: "Ein kontrollierbarer KI-Block-Builder statt starrem Template.",
     intro: "DexHost ist für Nutzer gebaut, die selbst bestimmen wollen: Texte, Bilder, Farben, Abstände, Varianten, SEO und Launch bleiben editierbar.",
-    proof: ["Block-Editor", "Bild-Uploads", "SEO und Mobile Preview"],
+    proof: ["Block-Editor", "Bild-Uploads", "SEO und mobile Vorschau"],
     sections: [
-      { title: "Section-System", body: "Hero, About, Services, Pricing, Gallery, Testimonials, FAQ, Contact, Team, Process, Before/After, CTA und Footer mit Varianten." },
+      { title: "Abschnitt-System", body: "Hero, Über uns, Leistungen, Preise, Galerie, Stimmen, FAQ, Kontakt, Team, Ablauf, Vorher/Nachher, CTA und Fußzeile mit Varianten." },
       { title: "Assets", body: "Eigene Bilder haben Vorrang. Canva- und KI-Assets werden als verwendbar gekennzeichnet." },
-      { title: "Sicherheit", body: "Speichern, Upload, KI-Aufrufe, Planprüfung und Publishing laufen über Netlify Functions." }
+      { title: "Sicherheit", body: "Speichern, Upload, KI-Aufrufe, Tarifprüfung und Veröffentlichung laufen serverseitig." }
     ]
   },
   examples: {
@@ -264,22 +264,22 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
   faq: {
     navLabel: "FAQ",
     title: "Antworten für den Start mit DexHost.",
-    intro: "Der Baukasten bleibt bewusst fokussiert: starke Firmenwebsite, kontrollierbare Sections, sichere Accounts und günstiger Launch.",
+    intro: "Der Baukasten bleibt bewusst fokussiert: starke Firmenwebsite, kontrollierbare Abschnitte, sichere Konten und günstiger Launch.",
     proof: ["Kein freies Drag-and-drop", "Serverseitige Rechte", "Netlify als Hauptplattform"],
     sections: [
-      { title: "Brauche ich sofort einen Account?", body: "Nein. Homepage, Features, Preise und Beispiele sind öffentlich. Der Account wird erst für den Baukasten gebraucht." },
+      { title: "Brauche ich sofort ein Konto?", body: "Nein. Homepage, Funktionen, Preise und Beispiele sind öffentlich. Das Konto wird erst für den Baukasten gebraucht." },
       { title: "Kann ich eigene Bilder nutzen?", body: "Ja. JPG, JPEG, PNG und WEBP sind erlaubt, die maximale Größe ist konfigurierbar." },
-      { title: "Wer entscheidet über Publishing?", body: "Nicht der Client. Die Netlify Function prüft Nutzer, Website-Besitz und Tarif." }
+      { title: "Wer entscheidet über Veröffentlichung?", body: "Nicht der Browser. DexHost prüft Nutzer, Website-Besitz und Tarif serverseitig." }
     ]
   },
   contact: {
     navLabel: "Kontakt",
     title: "Sprechen wir über den ersten hochwertigen Website-Launch.",
-    intro: "Das Kontaktformular ist für Netlify Forms vorbereitet. Für Produktzugriff führt der Weg bewusst über Login oder Registrierung.",
-    proof: ["Netlify Forms", "Schnelle Rückmeldung", "MVP-freundlicher Stack"],
+    intro: "Das Kontaktformular ist vorbereitet. Für Produktzugriff führt der Weg bewusst über Anmeldung oder Registrierung.",
+    proof: ["Kontaktformular", "Schnelle Rückmeldung", "Schlanker Start"],
     sections: [
       { title: "Projektanfrage", body: "Beschreibe Branche, Zielgruppe, Stil und vorhandene Bilder." },
-      { title: "Technik", body: "Netlify Hosting, Functions, Blobs und Deploys halten die Plattform schlank." },
+      { title: "Technik", body: "Hosting, Funktionen, Speicher und Veröffentlichung halten die Plattform schlank." },
       { title: "Launch", body: "Kostenlose Subdomain zuerst, eigene Domain später als Premium-Funktion." }
     ]
   },
@@ -287,7 +287,7 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     navLabel: "Launch-Hilfe",
     title: "Einmalige Launch-Hilfe, wenn es schneller professionell wirken soll.",
     intro: "Die monatlichen Tarife bleiben selbst bedienbar. Wer weniger Zeit investieren möchte, bucht einmalig Hilfe für Check, Setup oder Premium-Feinschliff.",
-    proof: ["Einmalzahlung", "PayPal serverseitig geprüft", "Keine Pflicht-Einrichtung"],
+    proof: ["Einmalzahlung", "PayPal sicher geprüft", "Keine Pflicht-Einrichtung"],
     sections: [
       { title: "Launch-Hilfe", body: "Kurzer Check von Struktur, Farben, SEO-Grunddaten und Veröffentlichung." },
       { title: "Setup-Service", body: "Geführte Einrichtung mit Branding, Startseite, Kontaktformular und Domain-Vorbereitung." },
@@ -309,10 +309,10 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     navLabel: "Datenschutz",
     title: "Datenschutzinformationen für DexHost.",
     intro: "Diese Seite ist öffentlich erreichbar und beschreibt die vorgesehenen Bausteine für Auth, Speicher, Forms und KI-Funktionen.",
-    proof: ["Serverseitige Auth", "Netlify Blobs", "OpenAI optional"],
+    proof: ["Serverseitige Anmeldung", "Sicherer Speicher", "KI optional"],
     sections: [
-      { title: "Accountdaten", body: "Login- und Profildaten werden über Netlify Functions und Blobs verarbeitet." },
-      { title: "Website-Daten", body: "Projekte, JSON und Assets liegen nutzerbezogen in Netlify Blobs oder einer späteren Datenbank." },
+      { title: "Kontodaten", body: "Anmelde- und Profildaten werden sicher serverseitig verarbeitet." },
+      { title: "Website-Daten", body: "Projekte, JSON und Assets werden nutzerbezogen gespeichert." },
       { title: "KI-Funktionen", body: "KI-Aufrufe laufen serverseitig. Inhalte sollten nur mit nötigen Projektdaten gesendet werden." }
     ]
   }
@@ -327,7 +327,7 @@ const pricingPlans: PricingPlan[] = [
     description: "Für erste Entwürfe, Briefings und interne Tests im DexHost Studio.",
     audience: "Du kannst die Website selbst einrichten, Texte ändern, Farben wählen und Layouts testen.",
     features: ["KI-Briefing und Website-Struktur", "Block-Editor mit Layout-Varianten", "Farben, Texte und SEO bearbeiten", "Eigene Bilder im Entwurf testen"],
-    limits: ["Kein öffentliches Publishing", "Keine eigene Domain", "DexHost Wasserzeichen in Vorschauen"],
+    limits: ["Keine öffentliche Veröffentlichung", "Keine eigene Domain", "DexHost Wasserzeichen in Vorschauen"],
     cta: "Kostenlos starten"
   },
   {
@@ -346,9 +346,9 @@ const pricingPlans: PricingPlan[] = [
     name: "Business",
     badge: "Beliebt",
     monthly: "19 EUR",
-    description: "Für echte Firmenwebsites mit Publishing, Subdomain, SSL und stärkerem Branding.",
+    description: "Für echte Firmenwebsites mit Veröffentlichung, Subdomain, sicherer Verbindung und stärkerem Branding.",
     audience: "Der beste Standardtarif, wenn die Website öffentlich und professionell nutzbar sein soll.",
-    features: ["Alles aus Basic", "Publishing auf DexHost Subdomain", "SSL automatisch", "Mehrseitige Website-Struktur", "Erweiterte Branding-Farben", "Bis zu 5 Websites", "Bis zu 1 GB Bildspeicher"],
+    features: ["Alles aus Basic", "Veröffentlichung auf DexHost Subdomain", "Sichere Verbindung automatisch", "Mehrseitige Website-Struktur", "Erweiterte Branding-Farben", "Bis zu 5 Websites", "Bis zu 1 GB Bildspeicher"],
     limits: ["Domainkosten extern", "Individuelle Texte nach Aufwand"],
     cta: "Business wählen",
     featured: true
@@ -410,7 +410,7 @@ const exampleCases: ExampleCase[] = [
     typography: "klare Sans + weiche Akzente",
     nav: ["Behandlungen", "Praxis", "Team", "Termin"],
     metrics: [{ value: "12", label: "Behandlungsräume" }, { value: "98%", label: "Weiterempfehlung" }, { value: "Mo-Sa", label: "Sprechzeiten" }],
-    sections: ["Hero center-stage", "Services premium-cards", "Before/After split-proof", "Testimonials proof-band", "FAQ accordion"],
+    sections: ["Hero center-stage", "Leistungen premium-cards", "Vorher/Nachher split-proof", "Stimmen proof-band", "FAQ accordion"],
     highlights: ["Online-Termin", "Angstpatienten", "Ästhetische Zahnmedizin"],
     pagePlan: [
       { title: "Startseite", body: "Freundlicher Hero, drei Kernleistungen und ein sichtbarer Termin-Button." },
@@ -435,7 +435,7 @@ const exampleCases: ExampleCase[] = [
     typography: "technische Sans + kompakte Labels",
     nav: ["Gewerbe", "PV", "Projekte", "Notdienst"],
     metrics: [{ value: "24/7", label: "Service" }, { value: "140+", label: "Projekte" }, { value: "DIN", label: "geprüfte Prozesse" }],
-    sections: ["Hero product-panel", "Process timeline", "Gallery strip", "Services capability-matrix", "CTA banner"],
+    sections: ["Hero product-panel", "Ablauf timeline", "Galerie strip", "Leistungen capability-matrix", "CTA banner"],
     highlights: ["Gewerbeinstallationen", "PV-Anlagen", "Wartung"],
     pagePlan: [
       { title: "Startseite", body: "Starker Hero mit Einsatzgebiet, Notfall-Hinweis und Leistungsübersicht." },
@@ -460,7 +460,7 @@ const exampleCases: ExampleCase[] = [
     typography: "fette Sans + bewegte Akzente",
     nav: ["Training", "Kurse", "Coaches", "Preise"],
     metrics: [{ value: "42", label: "Kurse/Woche" }, { value: "8", label: "Coaches" }, { value: "06-23", label: "geöffnet" }],
-    sections: ["Hero cinematic", "Process steps", "Pricing highlight", "Testimonials featured-story", "CTA banner"],
+    sections: ["Hero cinematic", "Ablauf steps", "Preise highlight", "Stimmen featured-story", "CTA banner"],
     highlights: ["Probetraining", "Strength Classes", "Personal Coaching"],
     pagePlan: [
       { title: "Startseite", body: "Großes Studiofoto, starker Kurs-CTA und sofort sichtbare Mitgliedschaften." },
@@ -485,7 +485,7 @@ const exampleCases: ExampleCase[] = [
     typography: "edle Serif + reduzierte Sans",
     nav: ["Objekte", "Verkauf", "Bewertung", "Kontakt"],
     metrics: [{ value: "1,2 Mrd.", label: "Vermarktungsvolumen" }, { value: "31", label: "Premiumlagen" }, { value: "Diskret", label: "Off-Market" }],
-    sections: ["Hero editorial-split", "Gallery masonry", "About founder-story", "Before/After storyline", "Contact consultation"],
+    sections: ["Hero editorial-split", "Galerie masonry", "Über uns founder-story", "Vorher/Nachher storyline", "Kontakt consultation"],
     highlights: ["Objektbewertung", "Off-Market", "Premiumlagen"],
     pagePlan: [
       { title: "Startseite", body: "Editorialer Hero, große Objektbilder und ein ruhiger Einstieg in Verkauf oder Suche." },
@@ -510,7 +510,7 @@ const exampleCases: ExampleCase[] = [
     typography: "minimalistische Sans + monospaced Details",
     nav: ["Arbeiten", "Studio", "Prozess", "Kontakt"],
     metrics: [{ value: "18", label: "Launches/Jahr" }, { value: "4", label: "Wochen Sprint" }, { value: "Aww.", label: "Designniveau" }],
-    sections: ["Hero minimal", "Services feature-band", "Gallery spotlight", "Process lab", "Contact split-form"],
+    sections: ["Hero minimal", "Leistungen feature-band", "Galerie spotlight", "Ablauf lab", "Kontakt split-form"],
     highlights: ["Brand Strategy", "Webdesign", "Launch-Systeme"],
     pagePlan: [
       { title: "Startseite", body: "Minimaler Hero mit Portfolio-Fokus, klarer Positionierung und direktem Projekt-CTA." },
@@ -528,19 +528,19 @@ const designSystems: DesignSystem[] = [
 ];
 
 const fields: Record<SectionType, Array<{ key: string; label: string; multiline?: boolean }>> = {
-  hero: [{ key: "headline", label: "Headline", multiline: true }, { key: "body", label: "Intro", multiline: true }, { key: "primaryCta", label: "Primary CTA" }, { key: "secondaryCta", label: "Secondary CTA" }],
-  about: [{ key: "heading", label: "Heading" }, { key: "body", label: "Story", multiline: true }, { key: "stats", label: "Highlights", multiline: true }],
-  services: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "items", label: "Services, one per line", multiline: true }],
-  pricing: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "plans", label: "Name | Price | Features", multiline: true }],
-  gallery: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "captions", label: "Captions", multiline: true }],
-  testimonials: [{ key: "heading", label: "Heading" }, { key: "quotes", label: "Name: Quote", multiline: true }],
-  faq: [{ key: "heading", label: "Heading" }, { key: "questions", label: "Question? Answer", multiline: true }],
-  contact: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "email", label: "Email" }, { key: "phone", label: "Phone" }, { key: "address", label: "Address" }],
-  team: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "members", label: "Name | Role | Bio", multiline: true }],
-  process: [{ key: "heading", label: "Heading" }, { key: "intro", label: "Intro", multiline: true }, { key: "steps", label: "Title | Detail", multiline: true }],
-  beforeAfter: [{ key: "heading", label: "Heading" }, { key: "before", label: "Before", multiline: true }, { key: "after", label: "After", multiline: true }],
-  cta: [{ key: "heading", label: "Heading", multiline: true }, { key: "intro", label: "Intro", multiline: true }, { key: "primaryCta", label: "Primary CTA" }, { key: "secondaryCta", label: "Secondary CTA" }],
-  footer: [{ key: "brand", label: "Brand" }, { key: "tagline", label: "Tagline", multiline: true }, { key: "links", label: "Links", multiline: true }, { key: "legal", label: "Legal" }]
+  hero: [{ key: "headline", label: "Überschrift", multiline: true }, { key: "body", label: "Einleitung", multiline: true }, { key: "primaryCta", label: "Hauptbutton" }, { key: "secondaryCta", label: "Zweitbutton" }],
+  about: [{ key: "heading", label: "Überschrift" }, { key: "body", label: "Text", multiline: true }, { key: "stats", label: "Highlights", multiline: true }],
+  services: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "items", label: "Leistungen, eine pro Zeile", multiline: true }],
+  pricing: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "plans", label: "Name | Preis | Leistungen", multiline: true }],
+  gallery: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "captions", label: "Bildtexte", multiline: true }],
+  testimonials: [{ key: "heading", label: "Überschrift" }, { key: "quotes", label: "Name: Zitat", multiline: true }],
+  faq: [{ key: "heading", label: "Überschrift" }, { key: "questions", label: "Frage? Antwort", multiline: true }],
+  contact: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "email", label: "E-Mail" }, { key: "phone", label: "Telefon" }, { key: "address", label: "Adresse" }],
+  team: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "members", label: "Name | Rolle | Kurztext", multiline: true }],
+  process: [{ key: "heading", label: "Überschrift" }, { key: "intro", label: "Einleitung", multiline: true }, { key: "steps", label: "Titel | Detail", multiline: true }],
+  beforeAfter: [{ key: "heading", label: "Überschrift" }, { key: "before", label: "Vorher", multiline: true }, { key: "after", label: "Nachher", multiline: true }],
+  cta: [{ key: "heading", label: "Überschrift", multiline: true }, { key: "intro", label: "Einleitung", multiline: true }, { key: "primaryCta", label: "Hauptbutton" }, { key: "secondaryCta", label: "Zweitbutton" }],
+  footer: [{ key: "brand", label: "Marke" }, { key: "tagline", label: "Slogan", multiline: true }, { key: "links", label: "Links", multiline: true }, { key: "legal", label: "Rechtliches" }]
 };
 
 function now() { return new Date().toISOString(); }
@@ -558,6 +558,58 @@ function slugify(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+
 function splitLines(value = "") { return value.split("\n").map((line) => line.trim()).filter(Boolean); }
 function formatBytes(bytes: number) { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`; }
 function formatDate(value?: string) { return value ? new Date(value).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" }) : "Noch nicht erfasst"; }
+function planLabel(plan?: AccountProfile["plan"] | string) {
+  const labels: Record<string, string> = { free: "Free", basic: "Basic", business: "Business", pro: "Pro", admin: "Admin" };
+  return labels[String(plan || "free")] || String(plan || "Free");
+}
+function accountStatusLabel(status?: string) {
+  const labels: Record<string, string> = { active: "Aktiv", pending: "Ausstehend", suspended: "Gesperrt", trial: "Testphase" };
+  return labels[String(status || "active").toLowerCase()] || String(status || "Aktiv");
+}
+function publishingStatusLabel(status?: string) {
+  const labels: Record<string, string> = { "not-started": "Entwurf", "ready-to-publish": "Bereit", published: "Veröffentlicht", draft: "Entwurf" };
+  return labels[String(status || "draft").toLowerCase()] || String(status || "Entwurf");
+}
+function optionLabel(value: string) {
+  const labels: Record<string, string> = {
+    left: "Links",
+    right: "Rechts",
+    top: "Oben",
+    background: "Hintergrund",
+    none: "Keine",
+    solid: "Einfarbig",
+    outline: "Kontur",
+    "soft-gradient": "Weicher Verlauf",
+    image: "Bildfläche",
+    editorial: "Editorial",
+    pattern: "Muster",
+    "editorial-shape": "Editoriale Fläche",
+    "grid-lines": "Feine Linien",
+    grid: "Raster",
+    lines: "Linien",
+    frame: "Rahmen",
+    "accent-block": "Akzentfläche",
+    orb: "Lichtfläche",
+    ribbon: "Band",
+    "line-art": "Liniengrafik",
+    minimal: "Minimal",
+    balanced: "Ausgewogen",
+    generous: "Großzügig",
+    sharp: "Kantig",
+    soft: "Weich",
+    round: "Rund",
+    small: "Klein",
+    medium: "Mittel",
+    large: "Groß",
+    subtle: "Dezent",
+    deep: "Stark",
+    crisp: "Klar",
+    pill: "Pill",
+    square: "Eckig",
+    luxury: "Elegant"
+  };
+  return labels[value] || value;
+}
 function normalizePathname(value = window.location.pathname) {
   const cleanPath = value.split("?")[0].replace(/\/+$/, "");
   return cleanPath || "/";
@@ -702,13 +754,13 @@ function content(type: SectionType, brief: Brief): Record<string, string> {
     hero: { headline: `${brief.companyName} zeigt ${brief.industry} klar, hochwertig und direkt anfragbar.`, body: `Ein professioneller Auftritt für ${brief.audience} in ${brief.location}. DexHost erzeugt die Struktur, Sie behalten die Kontrolle.`, primaryCta: "Beratung anfragen", secondaryCta: "Leistungen ansehen" },
     about: { heading: `Warum ${brief.companyName}`, body: "Zeigen Sie Haltung, Erfahrung und Arbeitsweise in einer Geschichte, die Vertrauen schafft.", stats: "Klare Positionierung\nSchnelle Abstimmung\nPremium Eindruck" },
     services: { heading: "Leistungen mit Struktur", intro: "Besucher verstehen sofort, was Sie anbieten und welcher nächste Schritt sinnvoll ist.", items: "Beratung und Strategie\nUmsetzung und Betreuung\nContent und SEO\nLaunch und Optimierung" },
-    pricing: { heading: "Pakete für klare Entscheidungen", intro: "Transparente Optionen helfen beim Vergleich.", plans: "Basic | 9 EUR mtl. | Editor, Speichern, Vorschau\nBusiness | 19 EUR mtl. | Publishing, SSL, Branding\nPro | 49 EUR mtl. | Domain-Vorbereitung, mehr Assets, Premium-Workflows" },
+    pricing: { heading: "Pakete für klare Entscheidungen", intro: "Transparente Optionen helfen beim Vergleich.", plans: "Basic | 9 EUR mtl. | Editor, Speichern, Vorschau\nBusiness | 19 EUR mtl. | Veröffentlichung, sichere Verbindung, Branding\nPro | 49 EUR mtl. | Domain-Vorbereitung, mehr Assets, Premium-Workflows" },
     gallery: { heading: "Bildsprache, die zur Firma passt", intro: "Eigene Bilder zuerst. Fehlende Motive werden geplant und als verwendbar markiert.", captions: "Arbeitsprozess\nDetailaufnahme\nKundenerlebnis\nErgebnis" },
     testimonials: { heading: "Vertrauen durch echte Stimmen", quotes: "Kunde A: Sehr professionell und klar.\nKunde B: Der Auftritt wirkt deutlich hochwertiger.\nKunde C: Schnell, strukturiert und angenehm." },
     faq: { heading: "Häufige Fragen", questions: "Wie schnell geht der Start? Meist innerhalb weniger Tage.\nKann ich eigene Bilder nutzen? Ja, eigene Bilder haben Vorrang.\nKann ich später eine Domain verbinden? Ja, mit automatischem SSL." },
     contact: { heading: "Starten wir mit einem Gespräch", intro: "Eine kurze Anfrage reicht für den ersten sinnvollen nächsten Schritt.", email: "hello@example.com", phone: "+49 000 000000", address: brief.location },
     team: { heading: "Menschen und Kompetenz", intro: "Zeigen Sie Rollen dort, wo sie Vertrauen stärken.", members: "Mara Keller | Strategie | Klärt Ziele und Positionierung.\nLeon Hart | Design | Entwickelt digitale Auftritte.\nNina Vogt | Projektleitung | Hält Qualität und Timing zusammen." },
-    process: { heading: "Vom Briefing zum Launch", intro: "Ein klarer Ablauf macht die Entscheidung leichter.", steps: "Briefing | Ziele, Zielgruppe und Stil klären.\nDesignsystem | Farben, Typografie und Bildsprache festlegen.\nEditor | Sections bearbeiten und mobil prüfen.\nLaunch | Subdomain starten, Domain später verbinden." },
+    process: { heading: "Vom Briefing zum Launch", intro: "Ein klarer Ablauf macht die Entscheidung leichter.", steps: "Briefing | Ziele, Zielgruppe und Stil klären.\nDesignsystem | Farben, Typografie und Bildsprache festlegen.\nEditor | Abschnitte bearbeiten und mobil prüfen.\nLaunch | Subdomain starten, Domain später verbinden." },
     beforeAfter: { heading: "Vorher und nachher spürbar anders", before: "Vorher: austauschbare Texte, generische Bilder und schwache Kontaktführung.", after: "Nachher: klare Botschaft, individuelle Struktur und professioneller erster Eindruck." },
     cta: { heading: "Bereit für eine Website, die nicht nach Baukasten aussieht?", intro: "DexHost liefert die erste starke Version, Sie verfeinern jedes Detail.", primaryCta: "Website starten", secondaryCta: "Design prüfen" },
     footer: { brand: brief.companyName, tagline: `${brief.industry} aus ${brief.location}. Klar positioniert und professionell präsentiert.`, links: "Start\nLeistungen\nProzess\nKontakt\nImpressum", legal: `(c) ${new Date().getFullYear()} ${brief.companyName}.` }
@@ -960,7 +1012,7 @@ function AppRoutes() {
       if (!cookieValue("dexhost_csrf")) await request<{ csrfToken: string }>("/api/auth/csrf");
       if (authMode === "forgot") {
         await request<{ ok: boolean }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email: authForm.email }) });
-        setAuthStatus("Wenn der Account existiert, wird der Reset vorbereitet. E-Mail-Versand wird später angebunden.");
+        setAuthStatus("Wenn das Konto existiert, wird der Reset vorbereitet. E-Mail-Versand wird später angebunden.");
         return;
       }
       const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
@@ -978,7 +1030,7 @@ function AppRoutes() {
         navigate("/login");
       }
     } catch (error) {
-      setAuthStatus(error instanceof Error ? error.message : "Login fehlgeschlagen.");
+      setAuthStatus(error instanceof Error ? error.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setAuthLoading(false);
     }
@@ -1005,9 +1057,9 @@ function AppRoutes() {
       const response = await request<{ profile: AccountProfile }>("/api/account", { method: "PUT", body: JSON.stringify(nextForm) });
       setSession({ ...session, profile: response.profile });
       setProfileForm(toProfileForm(response.profile));
-      setStatus("Account serverseitig aktualisiert.");
+      setStatus("Profil gespeichert.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Account konnte nicht gespeichert werden.");
+      setStatus(error instanceof Error ? error.message : "Profil konnte nicht gespeichert werden.");
     }
   }
 
@@ -1095,7 +1147,7 @@ function AppRoutes() {
       setSelectedSectionId(nextProject.website.sections[0]?.id || "");
       setAssets([]);
       if (response.integrations) setIntegrations(response.integrations);
-      setStatus(response.source === "openai" ? "OpenAI website plan ready and saved" : "Server fallback website plan saved");
+      setStatus(response.source === "openai" ? "KI-Website wurde erstellt und gespeichert." : "Website-Entwurf wurde erstellt und gespeichert.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "KI-Generierung fehlgeschlagen.");
     } finally {
@@ -1133,8 +1185,8 @@ function AppRoutes() {
 
   async function uploadImage(file: File) {
     const extension = file.name.split(".").pop()?.toLowerCase() || "";
-    if (!uploadConfig.allowedTypes.includes(extension)) return setStatus(`Only ${uploadConfig.allowedTypes.join(", ")} images are allowed.`);
-    if (file.size > uploadConfig.maxBytes) return setStatus(`Image is too large. Max ${formatBytes(uploadConfig.maxBytes)}.`);
+    if (!uploadConfig.allowedTypes.includes(extension)) return setStatus(`Erlaubt sind nur Bilder als ${uploadConfig.allowedTypes.join(", ")}.`);
+    if (file.size > uploadConfig.maxBytes) return setStatus(`Das Bild ist zu groß. Maximal ${formatBytes(uploadConfig.maxBytes)}.`);
     const dataUrl = await readFile(file);
     try {
       const targetProject = projectId ? projects.find((item) => item.id === projectId) : await persistWebsite(website, "Projekt vor Upload gespeichert");
@@ -1155,8 +1207,8 @@ function AppRoutes() {
           return { ...section, imageUrls: [response.asset.url] };
         })
       } : website;
-      syncWebsite(nextWebsite, "Image uploaded to Netlify Blobs and inserted");
-      await persistWebsite(nextWebsite, "Image URL im Website-JSON gespeichert", targetProjectId);
+      syncWebsite(nextWebsite, "Bild hochgeladen und eingefügt");
+      await persistWebsite(nextWebsite, "Bild in den Website-Daten gespeichert", targetProjectId);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Upload fehlgeschlagen.");
     }
@@ -1174,7 +1226,7 @@ function AppRoutes() {
   async function runAssetAgent() {
     try {
       const response = await request<{ assetNeeds: AssetNeed[]; notes?: string; integrations?: StudioIntegrations }>("/api/websites/asset-plan", { method: "POST", body: JSON.stringify({ brief: website.brief, website }) });
-      syncWebsite({ ...website, assetNeeds: response.assetNeeds || website.assetNeeds }, response.notes || "Asset plan ready");
+      syncWebsite({ ...website, assetNeeds: response.assetNeeds || website.assetNeeds }, response.notes || "Asset-Plan ist bereit.");
       if (response.integrations) setIntegrations(response.integrations);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Asset-Agent fehlgeschlagen.");
@@ -1183,13 +1235,13 @@ function AppRoutes() {
 
   async function publishWebsite() {
     try {
-      const saved = await persistWebsite(website, "Website vor Publishing gespeichert");
+      const saved = await persistWebsite(website, "Website vor Veröffentlichung gespeichert");
       const response = await request<{ website: WebsiteProject; publicUrl: string; subdomain: string; deploy: { provider: string; status?: string; queued?: boolean } }>(`/api/websites/${saved.id}/publish`, { method: "POST" });
       setProjects((items) => items.map((item) => item.id === response.website.id ? response.website : item));
       setWebsite(response.website.website);
-      setStatus(`Publishing serverseitig freigegeben: ${response.subdomain}`);
+      setStatus(`Veröffentlichung freigegeben: ${response.subdomain}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Publishing fehlgeschlagen.");
+      setStatus(error instanceof Error ? error.message : "Veröffentlichung fehlgeschlagen.");
     }
   }
   async function activatePayPalSubscription(plan: AccountProfile["plan"], subscriptionId: string) {
@@ -1199,7 +1251,7 @@ function AppRoutes() {
       const response = await request<{ profile: AccountProfile; plan: AccountProfile["plan"]; status: string; subscriptionId: string }>("/api/billing/paypal/subscription/activate", { method: "POST", body: JSON.stringify({ plan, subscriptionId }) });
       setSession((current) => current ? { ...current, profile: response.profile } : current);
       setProfileForm(toProfileForm(response.profile));
-      setBillingStatus(`PayPal Abo bestätigt. Tarif ${response.plan} ist aktiv.`);
+      setBillingStatus(`PayPal-Abo bestätigt. Tarif ${planLabel(response.plan)} ist aktiv.`);
       routerNavigate(`/billing/success?subscription=${encodeURIComponent(response.subscriptionId)}`, { replace: true });
     } catch (error) {
       setBillingStatus(error instanceof Error ? error.message : "PayPal-Abo konnte nicht bestätigt werden.");
@@ -1209,7 +1261,7 @@ function AppRoutes() {
   }
   async function startLaunchServiceCheckout(serviceId: LaunchService["id"]) {
     if (!session) {
-      setLaunchPaymentStatus("Bitte erst registrieren oder einloggen, damit DexHost die Zahlung deinem Account zuordnen kann.");
+      setLaunchPaymentStatus("Bitte erst registrieren oder einloggen, damit DexHost die Zahlung deinem Konto zuordnen kann.");
       navigate("/register");
       return;
     }
@@ -1267,19 +1319,19 @@ function AppRoutes() {
   }
 
   if (session === undefined) return <ProtectedLoading message="DexHost Session wird serverseitig geprüft..." />;
-  if (!session) return <ProtectedLoading message="Weiterleitung zum Login..." />;
+  if (!session) return <ProtectedLoading message="Weiterleitung zur Anmeldung..." />;
 
   const sidebar = (
     <aside className="sidebar">
       <div className="brand"><div>DH</div><strong>DexHost</strong></div>
       <nav>
         {[
-          ["studio", "Dashboard", "/dashboard"],
-          ["site", "Websites", "/dashboard/websites"],
+          ["studio", "Übersicht", "/dashboard"],
+          ["site", "Webseiten", "/dashboard/websites"],
           ["plus", "Neue Website", "/dashboard/websites/new"],
-          ["publish", "Publishing", projectId ? `/publish/${projectId}` : "/dashboard/websites"],
-          ["asset", "Billing", "/billing"],
-          ["settings", "Account", "/dashboard/profile"]
+          ["publish", "Veröffentlichen", projectId ? `/publish/${projectId}` : "/dashboard/websites"],
+          ["asset", "Abo & Zahlungen", "/billing"],
+          ["settings", "Profil", "/dashboard/profile"]
         ].map(([icon, label, target]) => {
           const targetPath = String(target);
           const active =
@@ -1295,9 +1347,9 @@ function AppRoutes() {
       <div className="side-note account-card">
         <strong>{session.profile.display_name}</strong>
         <span>{session.profile.email}</span>
-        <span>Plan: {session.profile.plan}</span>
+        <span>Tarif: {planLabel(session.profile.plan)}</span>
         <button onClick={() => { void loadProfile(); navigate("/dashboard/profile"); }}><Icon name="settings" />Profil</button>
-        <button onClick={logout}><Icon name="logout" />Logout</button>
+        <button onClick={logout}><Icon name="logout" />Abmelden</button>
       </div>
     </aside>
   );
@@ -1353,15 +1405,15 @@ function AppRoutes() {
       {sidebar}
       <section className="workspace">
         <header className="topbar">
-          <div><strong>DexHost Studio</strong><span>{website.publishing.subdomain}</span></div>
-          <div className="status-row"><span>OpenAI: {integrations?.openai?.configured ? integrations.openai.model : "Fallback"}</span><span>Storage: {integrations?.netlify?.blobs ? "Netlify Blobs" : "Function"}</span><span>Auth: Functions</span><span>SSL: automatic</span></div>
+          <div><strong>Website-Studio</strong><span>{website.title}</span></div>
+          <div className="status-row"><span>Tarif: {planLabel(session.profile.plan)}</span><span>Status: {publishingStatusLabel(website.publishing.status)}</span><span>Sichere Veröffentlichung vorbereitet</span></div>
         </header>
         <section className="brief-panel">
           <div className="page-title"><h1>Erstelle Firmenwebsites, die nicht gleich aussehen.</h1><p>DexHost fragt sauber an, generiert Struktur und Designvorschläge, und lässt jede Section kontrollierbar bearbeiten.</p></div>
           <div className="account-strip">
-            <label>Account Name<input value={accountName} onChange={(event) => setAccountName(event.target.value)} /></label>
-            <button onClick={saveAccount}><Icon name="save" />Account speichern</button>
-            <span>Plan, Publishing und Premium-Rechte werden nur in Netlify Functions geprüft.</span>
+            <label>Anzeigename<input value={accountName} onChange={(event) => setAccountName(event.target.value)} /></label>
+            <button onClick={saveAccount}><Icon name="save" />Profil speichern</button>
+            <span>Tarif, Veröffentlichung und Zusatzfunktionen werden sicher serverseitig geprüft.</span>
           </div>
           <div className="brief-grid">
             <label>Branche<input value={brief.industry} onChange={(event) => updateBrief("industry", event.target.value)} /></label>
@@ -1383,7 +1435,7 @@ function AppRoutes() {
             </div>
           </div>
           <div className="command-row">
-            <button className="primary" onClick={generateWebsite} disabled={isGenerating}><Icon name="spark" />{isGenerating ? "Designing..." : "KI-Website generieren"}</button>
+            <button className="primary" onClick={generateWebsite} disabled={isGenerating}><Icon name="spark" />{isGenerating ? "Erstellt..." : "KI-Website generieren"}</button>
             <button onClick={() => void persistWebsite()} disabled={isSaving}><Icon name="save" />{isSaving ? "Speichert..." : "Website speichern"}</button>
             <button onClick={runAssetAgent}><Icon name="wand" />Grafische Elemente erstellen</button>
             <button onClick={publishWebsite}><Icon name="publish" />Veröffentlichen</button>
@@ -1392,10 +1444,10 @@ function AppRoutes() {
         </section>
         <section className="studio-layout">
           <aside className="panel project-panel">
-            <h2>Projects</h2>
-            <div className="project-list">{projects.length ? projects.map((item) => <button className={item.id === projectId ? "active" : ""} key={item.id} onClick={() => { void switchProject(item.id); navigate(`/editor/${item.id}`); }}><strong>{item.title}</strong><span>{item.status || "draft"} / {new Date(item.updatedAt).toLocaleDateString()}</span></button>) : <p className="empty-note">Noch keine Website in Netlify Blobs.</p>}</div>
-            <h2>Sections</h2>
-            <div className="add-row"><select value={addType} onChange={(event) => setAddType(event.target.value as SectionType)}>{sectionTypes.map((type) => <option value={type} key={type}>{sectionLabels[type]}</option>)}</select><button onClick={addSection}><Icon name="plus" />Add</button></div>
+            <h2>Webseiten</h2>
+            <div className="project-list">{projects.length ? projects.map((item) => <button className={item.id === projectId ? "active" : ""} key={item.id} onClick={() => { void switchProject(item.id); navigate(`/editor/${item.id}`); }}><strong>{item.title}</strong><span>{publishingStatusLabel(item.status)} / {new Date(item.updatedAt).toLocaleDateString()}</span></button>) : <p className="empty-note">Noch keine Website gespeichert.</p>}</div>
+            <h2>Abschnitte</h2>
+            <div className="add-row"><select value={addType} onChange={(event) => setAddType(event.target.value as SectionType)}>{sectionTypes.map((type) => <option value={type} key={type}>{sectionLabels[type]}</option>)}</select><button onClick={addSection}><Icon name="plus" />Hinzufügen</button></div>
             <div className="section-list">{website.sections.map((section, index) => <article className={section.id === selectedSection?.id ? "active" : ""} key={section.id}><button onClick={() => setSelectedSectionId(section.id)}><strong>{sectionLabels[section.type]}</strong><span>{section.variant}</span></button><div><button disabled={index === 0} onClick={() => moveSection(section.id, -1)}><Icon name="up" /></button><button disabled={index === website.sections.length - 1} onClick={() => moveSection(section.id, 1)}><Icon name="down" /></button><button onClick={() => deleteSection(section.id)}><Icon name="trash" /></button></div></article>)}</div>
           </aside>
           <WebsitePreview website={website} mode={previewMode} setMode={setPreviewMode} />
@@ -1421,7 +1473,7 @@ function ProtectedLoading({ message }: { message: string }) {
 }
 
 function PublicNav({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
-  const links: Array<[string, string]> = [["Features", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["Launch-Hilfe", "/launch-hilfe"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
+  const links: Array<[string, string]> = [["Funktionen", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["Launch-Hilfe", "/launch-hilfe"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
   const currentExample = exampleCaseFor(currentPath);
   const websitePreviewPath = currentExample ? `/examples/${currentExample.slug}` : `/examples/${exampleCases[0].slug}`;
   const isActive = (path: string) => currentPath === path || (path === "/examples" && currentPath.startsWith("/examples/"));
@@ -1608,7 +1660,7 @@ function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: Pu
       <section className="public-band">
         <div className="public-section-head">
           <h2>{page.navLabel}</h2>
-          <p>{isExamples ? "Große Browser-Mockups und echte Branchenästhetik statt kleiner Template-Karten." : "Öffentlich sichtbar. Login wird erst beim produktiven Arbeiten im Studio verlangt."}</p>
+          <p>{isExamples ? "Große Browser-Mockups und echte Branchenästhetik statt kleiner Template-Karten." : "Öffentlich sichtbar. Anmeldung wird erst beim produktiven Arbeiten im Studio verlangt."}</p>
         </div>
         {isExamples ? <ExampleOverview onNavigate={onNavigate} /> : <div className="public-card-grid">{page.sections.map((item) => <article key={item.title}><h3>{item.title}</h3><p>{item.body}</p></article>)}</div>}
       </section>
@@ -1686,7 +1738,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
           <h1>Professionelle Unterstützung ohne laufende Zusatzkosten.</h1>
           <p>Die Tarife bleiben monatlich planbar. Launch-Hilfe, Setup und Premium-Setup sind separate Einmalzahlungen für Kunden, die beim Start schneller zu einem sauberen Ergebnis wollen.</p>
           <div className="public-cta-row">
-            <button className="primary" onClick={() => onNavigate(session ? "/dashboard" : "/register")}>{session ? "Dashboard öffnen" : "Kostenlos starten"}</button>
+            <button className="primary" onClick={() => onNavigate(session ? "/dashboard" : "/register")}>{session ? "Übersicht öffnen" : "Kostenlos starten"}</button>
             <button onClick={() => onNavigate("/pricing")}>Tarife ansehen</button>
           </div>
         </div>
@@ -1728,7 +1780,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
       </section>
 
       <section className="pricing-faq launch-faq">
-        <article><h3>Brauche ich dafür einen Account?</h3><p>Ja. Die Zahlung wird deinem DexHost Account zugeordnet, damit Support und gebuchte Leistung sauber nachvollziehbar bleiben.</p></article>
+        <article><h3>Brauche ich dafür ein Konto?</h3><p>Ja. Die Zahlung wird deinem DexHost-Konto zugeordnet, damit Support und gebuchte Leistung sauber nachvollziehbar bleiben.</p></article>
         <article><h3>Ändert das meinen Tarif?</h3><p>Nein. Einmalige Setup-Leistungen ersetzen kein Monatsabo und ändern keine Planrechte im Frontend.</p></article>
         <article><h3>Was passiert nach der Zahlung?</h3><p>DexHost prüft PayPal serverseitig, speichert die Buchung und zeigt dir eine Bestätigung auf der Zahlungsseite.</p></article>
       </section>
@@ -1745,7 +1797,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         <div>
           <span className="pricing-kicker">DexHost Preise</span>
           <h1>Professionelles AI Website Studio mit klaren Tarifen.</h1>
-          <p>Starte kostenlos und richte deine Website selbst ein. Monatliche Tarife schalten Speicher, Publishing, Branding und professionelle Workflows serverseitig frei.</p>
+          <p>Starte kostenlos und richte deine Website selbst ein. Monatliche Tarife schalten Speicher, Veröffentlichung, Branding und professionelle Workflows serverseitig frei.</p>
           <div className="public-cta-row">
             <button className="primary" onClick={() => onNavigate("/register")}>Kostenlos starten</button>
             <button onClick={() => onNavigate(session ? "/dashboard" : "/login")}>Baukasten öffnen</button>
@@ -1791,7 +1843,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         </div>
         <div className="pricing-table">
           {[
-            { name: "DIY", price: "0 EUR", body: "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Publishing erlaubt.", serviceId: "" },
+            { name: "DIY", price: "0 EUR", body: "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Veröffentlichung erlaubt.", serviceId: "" },
             ...launchServices.map((service) => ({ name: service.name, price: service.price, body: service.description, serviceId: service.id }))
           ].map(({ name, price, body, serviceId }) => (
             <article key={name}>
@@ -1806,7 +1858,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
 
       <section className="pricing-faq">
         {[
-          ["Kann ich alles selbst einrichten?", "Ja. DexHost ist so gebaut, dass Nutzer Texte, Bilder, Farben, Sections, SEO und Publishing selbst steuern können."],
+          ["Kann ich alles selbst einrichten?", "Ja. DexHost ist so gebaut, dass Nutzer Texte, Bilder, Farben, Abschnitte, SEO und Veröffentlichung selbst steuern können."],
           ["Kann ich später upgraden?", "Ja. Planrechte werden nicht im Frontend gespeichert, sondern serverseitig geprüft und über PayPal bestätigt."],
           ["Warum gibt es trotzdem Setup-Services?", "Manche Kunden wollen Zeit sparen oder einen geführten Launch. Deshalb ist Einrichtung optional und nicht Voraussetzung."]
         ].map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}
@@ -1879,33 +1931,33 @@ function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profi
   return (
     <section className="workspace account-page payment-success-page">
       <header className="topbar">
-        <div><strong>Zahlung abgeschlossen</strong><span>/billing/success</span></div>
-        <div className="status-row"><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span><span>Server geprüft</span></div>
+        <div><strong>Zahlung abgeschlossen</strong><span>Bestätigung</span></div>
+        <div className="status-row"><span>Tarif: {planLabel(profile.plan)}</span><span>Konto: {accountStatusLabel(profile.account_status)}</span><span>Sicher bestätigt</span></div>
       </header>
       <section className="account-hero payment-success-hero">
         <div>
           <span className={isConfirmed ? "success-pill" : "success-pill pending"}>{isConfirmed ? "Bestätigt" : "Wird geprüft"}</span>
           <h1>{isSetupPayment ? "Deine Launch-Hilfe ist gebucht." : isConfirmed ? "Dein Tarif ist aktiv." : "Zahlung wird geprüft."}</h1>
-          <p>{isSetupPayment ? "PayPal wurde serverseitig bestätigt. Die Buchung ist deinem DexHost Account zugeordnet." : isConfirmed ? "PayPal wurde serverseitig bestätigt. Du kannst jetzt zurück ins Studio und die freigeschalteten DexHost-Funktionen nutzen." : "Falls PayPal dich gerade zurückgeleitet hat, prüft DexHost die Zahlung im Hintergrund. Lade die Seite nicht mehrfach neu."}</p>
+          <p>{isSetupPayment ? "PayPal wurde serverseitig bestätigt. Die Buchung ist deinem DexHost-Konto zugeordnet." : isConfirmed ? "PayPal wurde serverseitig bestätigt. Du kannst jetzt zurück ins Studio und die freigeschalteten DexHost-Funktionen nutzen." : "Falls PayPal dich gerade zurückgeleitet hat, prüft DexHost die Zahlung im Hintergrund. Lade die Seite nicht mehrfach neu."}</p>
         </div>
         <div className="account-actions">
           <button onClick={onBilling}>Tarife ansehen</button>
-          <button className="primary" onClick={onDashboard}>Dashboard öffnen</button>
+          <button className="primary" onClick={onDashboard}>Übersicht öffnen</button>
         </div>
       </section>
       {status && <p className={isConfirmed ? "form-message success" : "form-message error"}>{status}</p>}
       <section className="profile-grid">
         <article className="profile-card">
           <h2>Nächster Schritt</h2>
-          <p className="empty-note">Öffne dein Dashboard, erstelle eine Website oder veröffentliche ein vorhandenes Projekt, wenn dein Tarif Publishing erlaubt.</p>
-          <button className="primary" onClick={onDashboard}>Zum Dashboard</button>
+          <p className="empty-note">Öffne deine Übersicht, erstelle eine Website oder veröffentliche ein vorhandenes Projekt, wenn dein Tarif die Veröffentlichung erlaubt.</p>
+          <button className="primary" onClick={onDashboard}>Zur Übersicht</button>
         </article>
         <article className="profile-card">
-          <h2>Aktueller Account</h2>
+          <h2>Aktuelles Konto</h2>
           <dl className="account-facts">
             <dt>E-Mail</dt><dd>{profile.email}</dd>
             <dt>Tarif</dt><dd>{profile.plan}</dd>
-            <dt>Account-Status</dt><dd>{profile.account_status}</dd>
+            <dt>Konto-Status</dt><dd>{accountStatusLabel(profile.account_status)}</dd>
           </dl>
         </article>
       </section>
@@ -1917,15 +1969,15 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
   return (
     <section className="workspace account-page">
       <header className="topbar">
-        <div><strong>Abo & Billing</strong><span>/billing</span></div>
-        <div className="status-row"><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span><span>PayPal serverseitig</span></div>
+        <div><strong>Abo & Zahlungen</strong><span>Tarife verwalten</span></div>
+        <div className="status-row"><span>Tarif: {planLabel(profile.plan)}</span><span>Konto: {accountStatusLabel(profile.account_status)}</span><span>PayPal sicher geprüft</span></div>
       </header>
       <section className="account-hero">
         <div>
           <h1>Tarif & Zahlung</h1>
-          <p>Pakete werden über PayPal Checkout gestartet und erst nach serverseitiger Bestätigung freigeschaltet. Der Client kann keinen Tarif selbst setzen.</p>
+          <p>Pakete werden über PayPal Checkout gestartet und erst nach serverseitiger Bestätigung freigeschaltet. Der Browser kann keinen Tarif selbst setzen.</p>
         </div>
-        <div className="account-actions"><button onClick={onBack}>Zurück ins Dashboard</button></div>
+        <div className="account-actions"><button onClick={onBack}>Zurück zur Übersicht</button></div>
       </section>
       {status && <p className={status.includes("bestätigt") || status.includes("aktiv") ? "form-message success" : "form-message error"}>{status}</p>}
       <section className="profile-grid">
@@ -1957,23 +2009,23 @@ function PublishPage({ website, projectId, profile, status, onBack, onPublish }:
   return (
     <section className="workspace account-page">
       <header className="topbar">
-        <div><strong>Publishing</strong><span>{projectId ? `/publish/${projectId}` : "/publish"}</span></div>
-        <div className="status-row"><span>Netlify Deploys</span><span>SSL: automatic</span><span>Plan: {profile.plan}</span></div>
+        <div><strong>Veröffentlichung</strong><span>{website.title}</span></div>
+        <div className="status-row"><span>Status: {publishingStatusLabel(website.publishing.status)}</span><span>Sichere Verbindung</span><span>Tarif: {planLabel(profile.plan)}</span></div>
       </header>
       <section className="account-hero">
         <div>
           <h1>Website veröffentlichen</h1>
-          <p>Die Freigabe läuft über die Netlify Function. Dort werden eingeloggter Nutzer, Website-Besitz und aktiver Tarif geprüft, bevor Subdomain und Assets veröffentlicht werden.</p>
+          <p>DexHost prüft Konto, Website-Besitz und aktiven Tarif sicher im Hintergrund, bevor deine Website online geht.</p>
         </div>
         <div className="account-actions">
-          <button onClick={onBack}>Zurück zum Editor</button>
+          <button onClick={onBack}>Zurück zum Bearbeiten</button>
           <button className="primary" disabled={!projectId || !canPublish} onClick={onPublish}>Veröffentlichen</button>
         </div>
       </section>
       {status && <p className={status.includes("requires") || status.includes("fehlgeschlagen") ? "form-message error" : "form-message success"}>{status}</p>}
       <section className="profile-grid">
-        <article className="profile-card"><h2>Website</h2><dl className="account-facts"><dt>Name</dt><dd>{website.title}</dd><dt>Subdomain</dt><dd>{website.publishing.subdomain}</dd><dt>Status</dt><dd>{website.publishing.status}</dd></dl></article>
-        <article className="profile-card"><h2>Server-Regeln</h2><p className="empty-note">Publishing ist nur für basic, business, pro oder admin aktiv. Free-Nutzer sehen den Flow, können aber nicht vom Client aus freischalten.</p></article>
+        <article className="profile-card"><h2>Website</h2><dl className="account-facts"><dt>Name</dt><dd>{website.title}</dd><dt>Adresse</dt><dd>{website.publishing.subdomain}</dd><dt>Status</dt><dd>{publishingStatusLabel(website.publishing.status)}</dd></dl></article>
+        <article className="profile-card"><h2>Freigabe</h2><p className="empty-note">Die Veröffentlichung wird erst nach sicherer Prüfung von Konto, Website-Besitz und aktivem Tarif freigegeben.</p></article>
       </section>
     </section>
   );
@@ -1985,14 +2037,14 @@ function AccountPage({ profile, form, status, saving, uploadConfig, onChange, on
   return (
     <section className="workspace account-page">
       <header className="topbar">
-        <div><strong>Profil & Account</strong><span>/dashboard/profile</span></div>
-        <div className="status-row"><span>Auth: Functions</span><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span></div>
+        <div><strong>Profil & Konto</strong><span>Persönliche Daten</span></div>
+        <div className="status-row"><span>Tarif: {planLabel(profile.plan)}</span><span>Konto: {accountStatusLabel(profile.account_status)}</span><span>Sicher angemeldet</span></div>
       </header>
       <form className="account-layout" onSubmit={onSave}>
         <section className="account-hero">
           <div>
-            <h1>Account-Daten</h1>
-            <p>E-Mail, Tarif und Billing-Rechte werden serverseitig geführt. Du bearbeitest hier nur die freigegebenen Profil-, Firmen- und Branding-Daten.</p>
+            <h1>Kontodaten</h1>
+            <p>E-Mail, Tarif und Zahlungsrechte werden serverseitig geführt. Du bearbeitest hier nur die freigegebenen Profil-, Firmen- und Branding-Daten.</p>
           </div>
           <div className="account-actions">
             <button type="button" onClick={onBack}>Zurück ins Studio</button>
@@ -2047,11 +2099,11 @@ function AccountPage({ profile, form, status, saving, uploadConfig, onChange, on
           <article className="profile-card">
             <h2>Abo & Nutzung</h2>
             <dl className="account-facts">
-              <dt>Aktueller Tarif</dt><dd>{profile.plan}</dd>
-              <dt>Account-Status</dt><dd>{profile.account_status}</dd>
+              <dt>Aktueller Tarif</dt><dd>{planLabel(profile.plan)}</dd>
+              <dt>Konto-Status</dt><dd>{accountStatusLabel(profile.account_status)}</dd>
               <dt>Erstellungsdatum</dt><dd>{formatDate(profile.created_at)}</dd>
               <dt>Letzte Anmeldung</dt><dd>{formatDate(profile.last_login_at)}</dd>
-              <dt>Billing</dt><dd>Wird nur serverseitig verwaltet.</dd>
+              <dt>Zahlungen</dt><dd>Werden sicher serverseitig verwaltet.</dd>
             </dl>
           </article>
         </section>
@@ -2061,7 +2113,7 @@ function AccountPage({ profile, form, status, saving, uploadConfig, onChange, on
 }
 
 function AuthScreen({ mode, form, status, loading, session, currentPath, onMode, onForm, onSubmit, onNavigate }: { mode: AuthMode; form: AuthForm; status: string; loading: boolean; session: AuthSession | null; currentPath: string; onMode: (mode: AuthMode) => void; onForm: (form: AuthForm) => void; onSubmit: (event: React.FormEvent) => void; onNavigate: (path: string) => void }) {
-  const title = mode === "login" ? "Login für DexHost Studio" : mode === "register" ? "Account erstellen" : "Passwort zurücksetzen";
+  const title = mode === "login" ? "Bei DexHost anmelden" : mode === "register" ? "Account erstellen" : "Passwort zurücksetzen";
   return (
     <main className="auth-shell auth-page route-transition">
       <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
@@ -2069,7 +2121,7 @@ function AuthScreen({ mode, form, status, loading, session, currentPath, onMode,
         <div className="brand"><div>DH</div><strong>DexHost</strong></div>
         <div className="auth-copy">
           <h1>{title}</h1>
-          <p>Login läuft über Netlify Functions mit HttpOnly-Cookies. Projekte, Bilder, KI-Aufrufe und Publishing werden anschließend serverseitig geprüft.</p>
+          <p>Dein Konto ist geschützt. Projekte, Bilder, KI-Aufrufe und Veröffentlichungen werden sicher serverseitig geprüft.</p>
         </div>
         <form onSubmit={onSubmit}>
           {mode === "register" && <label>Name<input value={form.displayName} onChange={(event) => onForm({ ...form, displayName: event.target.value })} autoComplete="name" /></label>}
@@ -2078,7 +2130,7 @@ function AuthScreen({ mode, form, status, loading, session, currentPath, onMode,
           <button className="primary" disabled={loading}>{loading ? "Bitte warten..." : mode === "login" ? "Einloggen" : mode === "register" ? "Registrieren" : "Link senden"}</button>
         </form>
         <div className="auth-actions">
-          <button className={mode === "login" ? "active" : ""} onClick={() => { onMode("login"); onNavigate("/login"); }}>Login</button>
+          <button className={mode === "login" ? "active" : ""} onClick={() => { onMode("login"); onNavigate("/login"); }}>Anmelden</button>
           <button className={mode === "register" ? "active" : ""} onClick={() => { onMode("register"); onNavigate("/register"); }}>Registrieren</button>
           <button className={mode === "forgot" ? "active" : ""} onClick={() => onMode("forgot")}>Passwort vergessen</button>
         </div>
@@ -2096,33 +2148,33 @@ function Inspector({ website, section, assets, uploadConfig, onPreset, onDesign,
       <div className="control-grid">
         <label>Palette<select value={website.designSystem.paletteName} onChange={(event) => onPreset(event.target.value)}>{designSystems.map((design) => <option value={design.paletteName} key={design.paletteName}>{design.paletteName}</option>)}</select></label>
         <label>Schriften<select value={website.designSystem.fontPair} onChange={(event) => onDesign((design) => ({ ...design, fontPair: event.target.value as DesignSystem["fontPair"] }))}>{fontPairs.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Buttons<select value={website.designSystem.buttonStyle} onChange={(event) => onDesign((design) => ({ ...design, buttonStyle: event.target.value as DesignSystem["buttonStyle"] }))}>{buttonStyles.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Rundung<select value={website.designSystem.radiusScale} onChange={(event) => onDesign((design) => ({ ...design, radiusScale: event.target.value as DesignSystem["radiusScale"] }))}>{radii.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Schatten<select value={website.designSystem.shadowStyle} onChange={(event) => onDesign((design) => ({ ...design, shadowStyle: event.target.value as DesignSystem["shadowStyle"] }))}>{shadows.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Accent<input type="color" value={website.designSystem.colors.accent} onChange={(event) => onDesign((design) => ({ ...design, colors: { ...design.colors, accent: event.target.value } }))} /></label>
+        <label>Buttons<select value={website.designSystem.buttonStyle} onChange={(event) => onDesign((design) => ({ ...design, buttonStyle: event.target.value as DesignSystem["buttonStyle"] }))}>{buttonStyles.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Rundung<select value={website.designSystem.radiusScale} onChange={(event) => onDesign((design) => ({ ...design, radiusScale: event.target.value as DesignSystem["radiusScale"] }))}>{radii.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Schatten<select value={website.designSystem.shadowStyle} onChange={(event) => onDesign((design) => ({ ...design, shadowStyle: event.target.value as DesignSystem["shadowStyle"] }))}>{shadows.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Akzentfarbe<input type="color" value={website.designSystem.colors.accent} onChange={(event) => onDesign((design) => ({ ...design, colors: { ...design.colors, accent: event.target.value } }))} /></label>
       </div>
       <h2>{sectionLabels[section.type]}</h2>
-      <label>Variant<select value={section.variant} onChange={(event) => onSection(section.id, (item) => ({ ...item, variant: event.target.value }))}>{sectionVariants[section.type].map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+      <label>Layout-Variante<select value={section.variant} onChange={(event) => onSection(section.id, (item) => ({ ...item, variant: event.target.value }))}>{sectionVariants[section.type].map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
       <div className="control-grid">
-        <label>Background<input type="color" value={section.styleSettings.backgroundColor || website.designSystem.colors.surface} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, backgroundColor: event.target.value } }))} /></label>
+        <label>Hintergrundfarbe<input type="color" value={section.styleSettings.backgroundColor || website.designSystem.colors.surface} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, backgroundColor: event.target.value } }))} /></label>
         <label>Text<input type="color" value={section.styleSettings.textColor || website.designSystem.colors.text} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, textColor: event.target.value } }))} /></label>
-        <label>Image<select value={section.styleSettings.imagePosition || "right"} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, imagePosition: event.target.value as ImagePosition } }))}>{imagePositions.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Spacing<select value={section.styleSettings.spacing || website.designSystem.spacingScale} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, spacing: event.target.value as DesignSystem["spacingScale"] } }))}>{spacings.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Background<select value={section.backgroundSettings.kind} onChange={(event) => onSection(section.id, (item) => ({ ...item, backgroundSettings: { ...item.backgroundSettings, kind: event.target.value as WebsiteSection["backgroundSettings"]["kind"] } }))}>{backgroundKinds.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <label>Graphic<select value={section.backgroundSettings.graphicElement || "none"} onChange={(event) => onSection(section.id, (item) => ({ ...item, backgroundSettings: { ...item.backgroundSettings, graphicElement: event.target.value as WebsiteSection["backgroundSettings"]["graphicElement"] } }))}>{graphicElements.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+        <label>Bildposition<select value={section.styleSettings.imagePosition || "right"} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, imagePosition: event.target.value as ImagePosition } }))}>{imagePositions.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Abstände<select value={section.styleSettings.spacing || website.designSystem.spacingScale} onChange={(event) => onSection(section.id, (item) => ({ ...item, styleSettings: { ...item.styleSettings, spacing: event.target.value as DesignSystem["spacingScale"] } }))}>{spacings.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Hintergrundstil<select value={section.backgroundSettings.kind} onChange={(event) => onSection(section.id, (item) => ({ ...item, backgroundSettings: { ...item.backgroundSettings, kind: event.target.value as WebsiteSection["backgroundSettings"]["kind"] } }))}>{backgroundKinds.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+        <label>Grafikelement<select value={section.backgroundSettings.graphicElement || "none"} onChange={(event) => onSection(section.id, (item) => ({ ...item, backgroundSettings: { ...item.backgroundSettings, graphicElement: event.target.value as WebsiteSection["backgroundSettings"]["graphicElement"] } }))}>{graphicElements.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
       </div>
       <div className="content-editor">{fields[section.type].map((field) => <label key={field.key}>{field.label}{field.multiline ? <textarea value={section.content[field.key] || ""} onChange={(event) => onSection(section.id, (item) => ({ ...item, content: { ...item.content, [field.key]: event.target.value } }))} /> : <input value={section.content[field.key] || ""} onChange={(event) => onSection(section.id, (item) => ({ ...item, content: { ...item.content, [field.key]: event.target.value } }))} />}</label>)}</div>
       <section className="image-library">
-        <h2>Project images</h2>
-        <label className="upload-zone"><Icon name="upload" />Upload image<input type="file" accept={uploadConfig.allowedTypes.map((item) => `.${item}`).join(",")} onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUpload(file); event.currentTarget.value = ""; }} /></label>
-        <small>{uploadConfig.allowedTypes.join(", ")} up to {formatBytes(uploadConfig.maxBytes)}</small>
-        <div className="image-grid">{assets.length ? assets.map((asset) => <button className={selected.has(asset.url) ? "active" : ""} key={asset.id} onClick={() => onPickImage(asset.url)}><img src={asset.url} alt={asset.file_name} /><span>{asset.file_name}</span></button>) : <p>No project images uploaded yet.</p>}</div>
+        <h2>Projektbilder</h2>
+        <label className="upload-zone"><Icon name="upload" />Bild hochladen<input type="file" accept={uploadConfig.allowedTypes.map((item) => `.${item}`).join(",")} onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUpload(file); event.currentTarget.value = ""; }} /></label>
+        <small>{uploadConfig.allowedTypes.join(", ")} bis {formatBytes(uploadConfig.maxBytes)}</small>
+        <div className="image-grid">{assets.length ? assets.map((asset) => <button className={selected.has(asset.url) ? "active" : ""} key={asset.id} onClick={() => onPickImage(asset.url)}><img src={asset.url} alt={asset.file_name} /><span>{asset.file_name}</span></button>) : <p>Noch keine Projektbilder hochgeladen.</p>}</div>
       </section>
-      <h2>SEO & Publishing</h2>
-      <label>SEO Title<input value={website.seo.title} onChange={(event) => onWebsite({ ...website, seo: { ...website.seo, title: event.target.value } })} /></label>
-      <label>Meta Description<textarea value={website.seo.description} onChange={(event) => onWebsite({ ...website, seo: { ...website.seo, description: event.target.value } })} /></label>
+      <h2>SEO & Veröffentlichung</h2>
+      <label>SEO-Titel<input value={website.seo.title} onChange={(event) => onWebsite({ ...website, seo: { ...website.seo, title: event.target.value } })} /></label>
+      <label>Meta-Beschreibung<textarea value={website.seo.description} onChange={(event) => onWebsite({ ...website, seo: { ...website.seo, description: event.target.value } })} /></label>
       <label>Subdomain<input value={website.publishing.subdomain} onChange={(event) => onWebsite({ ...website, publishing: { ...website.publishing, subdomain: event.target.value } })} /></label>
-      <section className="asset-panel"><h2>Asset agent</h2>{website.assetNeeds.map((asset) => <article key={asset.id}><strong>{asset.title}</strong><span>{asset.type} / {asset.priority}</span><p>{asset.reason}</p><small>{asset.sourcePolicy}</small></article>)}</section>
+      <section className="asset-panel"><h2>Asset-Assistent</h2>{website.assetNeeds.map((asset) => <article key={asset.id}><strong>{asset.title}</strong><span>{asset.type} / {asset.priority}</span><p>{asset.reason}</p><small>{asset.sourcePolicy}</small></article>)}</section>
     </>
   );
 }
@@ -2140,7 +2192,7 @@ function designStyle(website: WebsiteDocument): React.CSSProperties {
 function sectionImages(section: WebsiteSection) { return section.imageUrls.filter(Boolean); }
 function ImageFrame({ url, label }: { url?: string; label: string }) { return url ? <img className="site-image" src={url} alt={label} /> : <div className="site-image placeholder"><Icon name="image" /><span>{label}</span></div>; }
 function WebsitePreview({ website, mode, setMode }: { website: WebsiteDocument; mode: "desktop" | "mobile"; setMode: (mode: "desktop" | "mobile") => void }) {
-  return <section className={`preview-shell preview-${mode} button-${website.designSystem.buttonStyle} radius-${website.designSystem.radiusScale} shadow-${website.designSystem.shadowStyle}`} style={designStyle(website)}><div className="preview-top"><strong>{website.title}</strong><div><button className={mode === "desktop" ? "active" : ""} onClick={() => setMode("desktop")}>Desktop</button><button className={mode === "mobile" ? "active" : ""} onClick={() => setMode("mobile")}>Mobile</button></div></div><div className="preview-canvas">{website.sections.map((section) => <PreviewSection section={section} website={website} key={section.id} />)}</div></section>;
+  return <section className={`preview-shell preview-${mode} button-${website.designSystem.buttonStyle} radius-${website.designSystem.radiusScale} shadow-${website.designSystem.shadowStyle}`} style={designStyle(website)}><div className="preview-top"><strong>{website.title}</strong><div><button className={mode === "desktop" ? "active" : ""} onClick={() => setMode("desktop")}>Desktop</button><button className={mode === "mobile" ? "active" : ""} onClick={() => setMode("mobile")}>Mobil</button></div></div><div className="preview-canvas">{website.sections.map((section) => <PreviewSection section={section} website={website} key={section.id} />)}</div></section>;
 }
 function PreviewSection({ section, website }: { section: WebsiteSection; website: WebsiteDocument }) {
   const images = sectionImages(section);
@@ -2153,17 +2205,17 @@ function PreviewSection({ section, website }: { section: WebsiteSection; website
 function renderSection(section: WebsiteSection) {
   const c = section.content;
   const images = sectionImages(section);
-  if (section.type === "hero") return <div className="site-inner hero-inner"><div className="site-copy"><h1>{c.headline}</h1><p>{c.body}</p><div className="site-actions"><button>{c.primaryCta}</button><button>{c.secondaryCta}</button></div></div><ImageFrame url={images[0]} label="Hero image" /></div>;
-  if (section.type === "about") return <div className="site-inner split-inner"><ImageFrame url={images[0]} label="About image" /><div className="site-copy"><h2>{c.heading}</h2><p>{c.body}</p><div className="pill-row">{splitLines(c.stats).map((item) => <span key={item}>{item}</span>)}</div></div></div>;
-  if (section.type === "services") return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="card-grid">{splitLines(c.items).map((item, index) => <article key={item}><ImageFrame url={images[index]} label={`Service ${index + 1}`} /><strong>{item}</strong><p>Klare Leistung, sauberer Ablauf und ein direkter nächster Schritt.</p></article>)}</div></div>;
-  if (section.type === "gallery") { const gallery = images.length ? images : ["", "", "", ""]; const captions = splitLines(c.captions); return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="gallery-grid">{gallery.map((url, index) => <figure key={`${url}-${index}`}><ImageFrame url={url} label={`Gallery ${index + 1}`} /><figcaption>{captions[index] || `Bild ${index + 1}`}</figcaption></figure>)}</div></div>; }
+  if (section.type === "hero") return <div className="site-inner hero-inner"><div className="site-copy"><h1>{c.headline}</h1><p>{c.body}</p><div className="site-actions"><button>{c.primaryCta}</button><button>{c.secondaryCta}</button></div></div><ImageFrame url={images[0]} label="Hero-Bild" /></div>;
+  if (section.type === "about") return <div className="site-inner split-inner"><ImageFrame url={images[0]} label="Über-uns-Bild" /><div className="site-copy"><h2>{c.heading}</h2><p>{c.body}</p><div className="pill-row">{splitLines(c.stats).map((item) => <span key={item}>{item}</span>)}</div></div></div>;
+  if (section.type === "services") return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="card-grid">{splitLines(c.items).map((item, index) => <article key={item}><ImageFrame url={images[index]} label={`Leistung ${index + 1}`} /><strong>{item}</strong><p>Klare Leistung, sauberer Ablauf und ein direkter nächster Schritt.</p></article>)}</div></div>;
+  if (section.type === "gallery") { const gallery = images.length ? images : ["", "", "", ""]; const captions = splitLines(c.captions); return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="gallery-grid">{gallery.map((url, index) => <figure key={`${url}-${index}`}><ImageFrame url={url} label={`Galerie ${index + 1}`} /><figcaption>{captions[index] || `Bild ${index + 1}`}</figcaption></figure>)}</div></div>; }
   if (section.type === "testimonials") return <div className="site-inner"><SectionHead heading={c.heading} /><div className="quote-grid">{splitLines(c.quotes).map((line, index) => { const [name, ...quote] = line.split(":"); return <article key={`${line}-${index}`}><p>"{quote.join(":").trim() || line}"</p><strong>{quote.length ? name : "Kunde"}</strong></article>; })}</div></div>;
   if (section.type === "faq") return <div className="site-inner"><SectionHead heading={c.heading} /><div className="faq-list">{splitLines(c.questions).map((line) => { const marker = line.indexOf("?"); return <article key={line}><strong>{marker >= 0 ? line.slice(0, marker + 1) : line}</strong><p>{marker >= 0 ? line.slice(marker + 1).trim() : "Antwort hier ergänzen."}</p></article>; })}</div></div>;
-  if (section.type === "contact") return <div className="site-inner contact-inner"><div className="site-copy"><h2>{c.heading}</h2><p>{c.intro}</p><dl><dt>Email</dt><dd>{c.email}</dd><dt>Phone</dt><dd>{c.phone}</dd><dt>Address</dt><dd>{c.address}</dd></dl></div><form name="dexhost-contact" method="POST" data-netlify="true"><input type="hidden" name="form-name" value="dexhost-contact" /><input name="name" placeholder="Name" /><input name="email" type="email" placeholder="Email" /><textarea name="message" placeholder="Message" /><button type="submit">Anfrage senden</button></form></div>;
+  if (section.type === "contact") return <div className="site-inner contact-inner"><div className="site-copy"><h2>{c.heading}</h2><p>{c.intro}</p><dl><dt>E-Mail</dt><dd>{c.email}</dd><dt>Telefon</dt><dd>{c.phone}</dd><dt>Adresse</dt><dd>{c.address}</dd></dl></div><form name="dexhost-contact" method="POST" data-netlify="true"><input type="hidden" name="form-name" value="dexhost-contact" /><input name="name" placeholder="Name" /><input name="email" type="email" placeholder="E-Mail" /><textarea name="message" placeholder="Nachricht" /><button type="submit">Anfrage senden</button></form></div>;
   if (section.type === "pricing") return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="price-grid">{splitLines(c.plans).map((line, index) => { const [name, price, features] = line.split("|").map((item) => item.trim()); return <article className={index === 1 ? "featured" : ""} key={name}><strong>{name}</strong><b>{price}</b><ul>{(features || "").split(",").map((item) => <li key={item}>{item.trim()}</li>)}</ul><button>Wählen</button></article>; })}</div></div>;
   if (section.type === "team") return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="team-grid">{splitLines(c.members).map((line, index) => { const [name, role, bio] = line.split("|").map((item) => item.trim()); return <article key={name}><ImageFrame url={images[index]} label={name} /><span>{role}</span><strong>{name}</strong><p>{bio}</p></article>; })}</div></div>;
   if (section.type === "process") return <div className="site-inner"><SectionHead heading={c.heading} intro={c.intro} /><div className="process-list">{splitLines(c.steps).map((line, index) => { const [title, detail] = line.split("|").map((item) => item.trim()); return <article key={line}><b>{String(index + 1).padStart(2, "0")}</b><div><strong>{title}</strong><p>{detail}</p></div></article>; })}</div></div>;
-  if (section.type === "beforeAfter") return <div className="site-inner"><SectionHead heading={c.heading} /><div className="before-after"><article><ImageFrame url={images[0]} label="Before" /><span>Before</span><p>{c.before}</p></article><article><ImageFrame url={images[1]} label="After" /><span>After</span><p>{c.after}</p></article></div></div>;
+  if (section.type === "beforeAfter") return <div className="site-inner"><SectionHead heading={c.heading} /><div className="before-after"><article><ImageFrame url={images[0]} label="Vorher" /><span>Vorher</span><p>{c.before}</p></article><article><ImageFrame url={images[1]} label="Nachher" /><span>Nachher</span><p>{c.after}</p></article></div></div>;
   if (section.type === "cta") return <div className="site-inner cta-inner"><h2>{c.heading}</h2><p>{c.intro}</p><div className="site-actions"><button>{c.primaryCta}</button><button>{c.secondaryCta}</button></div></div>;
   return <footer className="site-inner footer-inner"><div><strong>{c.brand}</strong><p>{c.tagline}</p></div><nav>{splitLines(c.links).map((link) => <a key={link}>{link}</a>)}</nav><small>{c.legal}</small></footer>;
 }
