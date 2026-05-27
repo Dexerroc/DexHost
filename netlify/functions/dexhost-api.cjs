@@ -398,10 +398,21 @@ function localPath(storeName, key, extension) {
 async function withStore(storeName, action, fallback) {
   try {
     const { getStore } = await import("@netlify/blobs");
-    const store = getStore(storeName);
+    const siteID = clean(process.env.NETLIFY_SITE_ID || process.env.SITE_ID);
+    const token = clean(process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN);
+    const options = siteID && token ? { siteID, token } : undefined;
+    const store = options ? getStore(storeName, options) : getStore(storeName);
     return await action(store);
   } catch (error) {
-    if (process.env.NETLIFY === "true") throw error;
+    if (process.env.NETLIFY === "true") {
+      const message = String(error?.message || error);
+      if (/not been configured to use Netlify Blobs|MissingBlobsEnvironmentError|siteID|token/i.test(message)) {
+        const nextError = new Error("Netlify Blobs ist nicht konfiguriert. Setze in Netlify die Environment Variables NETLIFY_SITE_ID und NETLIFY_API_TOKEN, dann deploye erneut.");
+        nextError.statusCode = 503;
+        throw nextError;
+      }
+      throw error;
+    }
     return fallback();
   }
 }
@@ -1107,7 +1118,8 @@ exports.handler = async (event, context) => {
 
     return json(404, { error: "API route not found.", path });
   } catch (error) {
-    const statusCode = error.statusCode || (/Authentication|required|token/i.test(error.message) ? 401 : 500);
+    console.error("DexHost API error", { message: error.message, statusCode: error.statusCode, stack: error.stack });
+    const statusCode = error.statusCode || (/Authentication required/i.test(error.message) ? 401 : 500);
     return json(statusCode, { error: statusCode === 500 ? "Server error" : error.message, detail: process.env.NODE_ENV === "development" ? error.message : undefined });
   }
 };
