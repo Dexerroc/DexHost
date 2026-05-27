@@ -122,8 +122,8 @@ function csrfToken(event) {
   return parseCookies(event)[csrfCookieName] || crypto.randomBytes(24).toString("base64url");
 }
 
-function csrfCookie(event) {
-  return serializeReadableCookie(csrfCookieName, csrfToken(event), event, 60 * 60 * 24);
+function csrfCookie(event, value = csrfToken(event)) {
+  return serializeReadableCookie(csrfCookieName, value, event, 60 * 60 * 24);
 }
 
 function assertCsrf(event) {
@@ -400,13 +400,17 @@ async function withStore(storeName, action, fallback) {
     const { getStore } = await import("@netlify/blobs");
     const siteID = clean(process.env.NETLIFY_SITE_ID || process.env.SITE_ID);
     const token = clean(process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN);
-    const store = siteID && token ? getStore({ name: storeName, siteID, token }) : getStore(storeName);
-    return await action(store);
+    try {
+      return await action(getStore(storeName));
+    } catch (environmentError) {
+      if (!siteID || !token) throw environmentError;
+      return await action(getStore({ name: storeName, siteID, token }));
+    }
   } catch (error) {
     if (process.env.NETLIFY === "true") {
       const message = String(error?.message || error);
-      if (/not been configured to use Netlify Blobs|MissingBlobsEnvironmentError|siteID|token/i.test(message)) {
-        const nextError = new Error("Netlify Blobs ist nicht konfiguriert. Setze in Netlify die Environment Variables NETLIFY_SITE_ID und NETLIFY_API_TOKEN, dann deploye erneut.");
+      if (/not been configured to use Netlify Blobs|MissingBlobsEnvironmentError|siteID|token|unauthorized|forbidden|401|403|404/i.test(message)) {
+        const nextError = new Error("Netlify Blobs ist nicht erreichbar. Prüfe NETLIFY_SITE_ID und NETLIFY_API_TOKEN oder entferne beide Variablen, wenn Netlify Blobs automatisch bereitstellt.");
         nextError.statusCode = 503;
         throw nextError;
       }
@@ -960,7 +964,10 @@ exports.handler = async (event, context) => {
     if (method === "GET" && path === "/api/health") {
       return json(200, { ok: true, product: "DexHost", platform: "netlify", auth: "netlify-functions-blobs", storage: "netlify-blobs", functions: true, forms: true, deploys: integrations().netlify.deploys ? "configured" : "prepared" });
     }
-    if (method === "GET" && path === "/api/auth/csrf") return json(200, { csrfToken: csrfToken(event) }, [csrfCookie(event)]);
+    if (method === "GET" && path === "/api/auth/csrf") {
+      const token = csrfToken(event);
+      return json(200, { csrfToken: token }, [csrfCookie(event, token)]);
+    }
     if (method === "GET" && path === "/api/upload/config") return json(200, uploadConfig());
     if (method === "GET" && path === "/api/integrations/studio") return json(200, integrations());
 
