@@ -18,6 +18,11 @@ const csrfCookieName = "dexhost_csrf";
 const csrfHeaderName = "x-dexhost-csrf";
 const paidPlans = new Set(["basic", "business", "pro", "admin"]);
 const editablePlans = new Set(["free", "basic", "business", "pro", "admin"]);
+const billingPlans = {
+  basic: { name: "Basic", value: "9.00", currency: "EUR" },
+  business: { name: "Business", value: "19.00", currency: "EUR" },
+  pro: { name: "Pro", value: "49.00", currency: "EUR" }
+};
 
 function json(statusCode, body, cookies = []) {
   const response = {
@@ -49,6 +54,12 @@ function routePath(event) {
     return suffix.startsWith("/api/") ? suffix : `/api${suffix}`;
   }
   return pathname;
+}
+
+function originFor(event) {
+  const proto = event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https";
+  const host = event.headers.host || event.headers.Host || process.env.URL || "localhost:8888";
+  return host.startsWith("http") ? host.replace(/\/$/, "") : `${proto}://${host}`;
 }
 
 function bodyJson(event) {
@@ -548,6 +559,25 @@ async function updateProfile(auth, values) {
   return next;
 }
 
+async function setProfilePlan(auth, plan, billing = {}) {
+  if (!editablePlans.has(plan) || plan === "admin") {
+    const error = new Error("Ungültiger Tarif.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const profile = await ensureProfile(auth);
+  const next = {
+    ...profile,
+    plan,
+    billing_provider: billing.provider || "paypal",
+    billing_status: billing.status || "active",
+    billing_reference: billing.reference || "",
+    updated_at: now()
+  };
+  await blobSetJson(`profiles/${auth.userId}.json`, next);
+  return next;
+}
+
 const sectionTypes = ["hero", "about", "services", "pricing", "gallery", "testimonials", "faq", "contact", "team", "process", "beforeAfter", "cta", "footer"];
 const variants = {
   hero: ["editorial-split", "cinematic", "center-stage", "product-panel"],
@@ -695,6 +725,7 @@ function integrations() {
       assetStore: assetStoreName
     },
     canva: { available: true, mode: "connector-briefs", use: "logos, banners, hero graphics, social assets, trust badges" },
+    paypal: { configured: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), environment: clean(process.env.PAYPAL_ENV) || "sandbox" },
     publishing: { starter: `kunde.${subdomainSuffix}`, premium: "custom domain", providers: ["netlify-hosting", "netlify-deploys"], ssl: "automatic" }
   };
 }
@@ -949,6 +980,110 @@ async function publishWebsite(auth, websiteId) {
   return { row, deploy };
 }
 
+function paypalBaseUrl() {
+  return clean(process.env.PAYPAL_ENV).toLowerCase() === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+}
+
+async function paypalAccessToken() {
+  const clientId = clean(process.env.PAYPAL_CLIENT_ID);
+  const clientSecret = clean(process.env.PAYPAL_CLIENT_SECRET);
+  if (!clientId || !clientSecret) {
+    const error = new Error("PayPal ist noch nicht konfiguriert. Setze PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET und optional PAYPAL_ENV in Netlify.");
+    error.statusCode = 503;
+    throw error;
+  }
+  const response = await fetch(`${paypalBaseUrl()}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "grant_type=client_credentials"
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error_description || data.error || "PayPal Auth fehlgeschlagen.");
+    error.statusCode = 502;
+    throw error;
+  }
+  return data.access_token;
+}
+
+async function paypalRequest(path, options = {}) {
+  const token = await paypalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}${path}`, {
+    method: options.method || "GET",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.message || data.error_description || data.name || "PayPal request failed.");
+    error.statusCode = response.status >= 500 ? 502 : response.status;
+    throw error;
+  }
+  return data;
+}
+
+async function createPayPalOrder(auth, event, plan) {
+  const selected = billingPlans[plan];
+  if (!selected) {
+    const error = new Error("Bitte wähle Basic, Business oder Pro.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const origin = originFor(event);
+  const order = await paypalRequest("/v2/checkout/orders", {
+    method: "POST",
+    body: {
+      intent: "CAPTURE",
+      purchase_units: [{
+        reference_id: `dexhost-${plan}`,
+        custom_id: auth.userId,
+        description: `DexHost ${selected.name} - erster Monat`,
+        amount: { currency_code: selected.currency, value: selected.value }
+      }],
+      application_context: {
+        brand_name: "DexHost",
+        landing_page: "LOGIN",
+        user_action: "PAY_NOW",
+        return_url: `${origin}/billing?paypal=success`,
+        cancel_url: `${origin}/billing?paypal=cancel`
+      }
+    }
+  });
+  const approvalUrl = (order.links || []).find((link) => link.rel === "approve")?.href;
+  if (!approvalUrl) {
+    const error = new Error("PayPal konnte keinen Freigabe-Link erstellen.");
+    error.statusCode = 502;
+    throw error;
+  }
+  await blobSetJson(`billing/paypal/orders/${order.id}.json`, { id: order.id, user_id: auth.userId, plan, amount: selected.value, currency: selected.currency, status: "created", created_at: now() });
+  return { orderId: order.id, approvalUrl, plan };
+}
+
+async function capturePayPalOrder(auth, orderId) {
+  const pending = await blobGetJson(`billing/paypal/orders/${orderId}.json`);
+  if (!pending || pending.user_id !== auth.userId) {
+    const error = new Error("PayPal-Zahlung wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (pending.status === "completed") {
+    const profile = await setProfilePlan(auth, pending.plan, { provider: "paypal", status: "active", reference: orderId });
+    return { profile, plan: pending.plan, status: "completed" };
+  }
+  const captured = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, { method: "POST", body: {} });
+  if (captured.status !== "COMPLETED") {
+    const error = new Error("PayPal-Zahlung ist noch nicht abgeschlossen.");
+    error.statusCode = 402;
+    throw error;
+  }
+  await blobSetJson(`billing/paypal/orders/${orderId}.json`, { ...pending, status: "completed", paypal_status: captured.status, captured_at: now() });
+  const profile = await setProfilePlan(auth, pending.plan, { provider: "paypal", status: "active", reference: orderId });
+  return { profile, plan: pending.plan, status: captured.status };
+}
+
 exports.config = { path: "/api/*" };
 
 exports.handler = async (event, context) => {
@@ -1032,6 +1167,16 @@ exports.handler = async (event, context) => {
     }
 
     const auth = await requireUser(event, context);
+
+    if (method === "POST" && path === "/api/billing/paypal/create") {
+      const checkout = await createPayPalOrder(auth, event, clean(bodyJson(event).plan).toLowerCase());
+      return json(201, checkout, auth.cookies);
+    }
+
+    if (method === "POST" && path === "/api/billing/paypal/capture") {
+      const result = await capturePayPalOrder(auth, clean(bodyJson(event).orderId));
+      return json(200, { ...result, profile: profileOut(result.profile, auth.user) }, auth.cookies);
+    }
 
     if (method === "GET" && (path === "/api/account" || path === "/api/profile")) {
       const profile = await ensureProfile(auth);

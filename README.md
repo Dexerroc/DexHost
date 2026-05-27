@@ -91,11 +91,16 @@ OPENAI_MODEL=gpt-4o-mini
 NETLIFY_SITE_ID=
 NETLIFY_API_TOKEN=
 NETLIFY_BUILD_HOOK_URL=
+PAYPAL_ENV=sandbox
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
 DEXHOST_SUBDOMAIN_SUFFIX=dexhost.de
 IMAGE_UPLOAD_MAX_BYTES=5242880
 ```
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
+
+PayPal Checkout wird serverseitig ueber Functions gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen.
 
 ## Entwicklung
 

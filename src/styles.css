@@ -1309,6 +1309,23 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
 }
 .profile-card h2 { margin: 0; font-size: 1.05rem; }
 .profile-card small { color: #9fb0c4; }
+.billing-plan {
+  align-content: start;
+}
+.billing-plan > span {
+  width: fit-content;
+  border: 1px solid rgba(143, 211, 204, .22);
+  border-radius: 999px;
+  background: rgba(143, 211, 204, .08);
+  color: #c8fff7;
+  padding: .38rem .6rem;
+  font-size: .78rem;
+  font-weight: 900;
+}
+.billing-plan > strong {
+  color: #f8fbff;
+  font-size: 1.55rem;
+}
 .profile-fields { display: grid; gap: .72rem; }
 .profile-fields.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .profile-fields.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1368,6 +1385,52 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: .72rem;
+}
+.page-selector {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: .85rem;
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 12px;
+  background: rgba(4, 8, 14, .35);
+  padding: .9rem;
+}
+.page-selector > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.page-selector strong {
+  color: #f8fbff;
+  font-size: 1rem;
+}
+.page-selector span {
+  color: #9fb0c4;
+  font-size: .84rem;
+}
+.page-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: .45rem;
+}
+.page-chip-grid button {
+  min-height: 2.45rem;
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .45);
+  color: #dce8f6;
+  font-weight: 900;
+}
+.page-chip-grid button.active {
+  border-color: rgba(76, 203, 192, .5);
+  background: rgba(76, 203, 192, .13);
+  color: #d8fffb;
+}
+.page-chip-grid button:disabled {
+  cursor: not-allowed;
+  opacity: .72;
 }
 label {
   display: grid;
@@ -1716,6 +1779,7 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
   .app-shell, .studio-layout, .page-title, .brief-grid, .account-strip, .profile-grid, .profile-fields.two, .profile-fields.three, .brand-upload-row { grid-template-columns: 1fr; }
   .public-nav, .public-hero, .public-section-head, .public-card-grid, .pricing-hero, .pricing-grid, .pricing-compare, .pricing-faq, .example-showcase, .example-showcase.is-reversed, .example-detail-hero, .example-detail-band, .example-story-grid { grid-template-columns: 1fr; }
   .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-chip-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .example-showcase.is-reversed .example-showcase-copy { order: 0; }
   .public-nav nav, .public-actions { justify-content: flex-start; }
   .public-hero { min-height: auto; }
@@ -1747,6 +1811,7 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
   .example-detail-copy h1 { font-size: 3rem; }
   .example-showcase-copy h3 { font-size: 3rem; }
   .pricing-grid, .pricing-table, .pricing-faq, .pricing-money { grid-template-columns: 1fr; }
+  .page-chip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pricing-hero h1 { max-width: calc(100vw - 2rem); font-size: 3rem; }
   .pricing-card { min-height: auto; }
   .example-showcase-details div { grid-template-columns: 1fr; gap: .25rem; }

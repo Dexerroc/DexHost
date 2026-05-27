@@ -106,6 +106,8 @@ type ExampleCase = {
 type ProtectedRoute = { kind: "dashboard" | "profile" | "websites" | "new-website" | "editor" | "billing" | "publish"; websiteId?: string };
 
 const uploadConfigDefault: UploadConfig = { allowedTypes: ["jpg", "jpeg", "png", "webp"], maxBytes: Number(import.meta.env.VITE_IMAGE_UPLOAD_MAX_BYTES || 5 * 1024 * 1024), configured: false };
+const pageOptions = ["Startseite", "Leistungen", "Über uns", "Referenzen", "Preise", "FAQ", "Kontakt", "Team", "Ablauf", "Galerie", "Impressum", "Datenschutz"];
+const requiredPages = new Set(["Startseite", "Kontakt"]);
 const emptyProfileForm: ProfileForm = {
   display_name: "",
   first_name: "",
@@ -288,6 +290,7 @@ const pricingPlans: PricingPlan[] = [
     cta: "Pro wählen"
   }
 ];
+const paidPricingPlans = pricingPlans.filter((plan) => ["basic", "business", "pro"].includes(plan.id));
 
 const exampleCases: ExampleCase[] = [
   {
@@ -541,6 +544,16 @@ function toProfileForm(profile?: AccountProfile | null): ProfileForm {
 function defaultBrief(seed = "Premium Unternehmen"): Brief {
   return { industry: seed, companyName: "DexHost Demo Kunde", location: "Berlin", audience: "anspruchsvolle lokale und digitale Kunden", style: "modern, hochwertig, vertrauenswürdig", colorPreference: "ruhige professionelle Farben", hasOwnImages: "no", pages: "Startseite, Leistungen, Kontakt" };
 }
+function briefPages(value = "") {
+  const normalized = value.split(/[,;\n]/).map((item) => cleanLabel(item)).filter(Boolean);
+  return Array.from(new Set(["Startseite", ...normalized, "Kontakt"]));
+}
+function cleanLabel(value = "") {
+  return value.trim().replace(/\s+/g, " ");
+}
+function pageSummary(value = "") {
+  return briefPages(value).join(", ");
+}
 function designFor(brief: Brief) {
   const text = `${brief.industry} ${brief.style} ${brief.colorPreference}`.toLowerCase();
   if (/medizin|arzt|health|clinic|pflege/.test(text)) return designSystems[1];
@@ -654,6 +667,9 @@ function AppRoutes() {
   const [profileForm, setProfileForm] = useState<ProfileForm>(() => toProfileForm(null));
   const [profileStatus, setProfileStatus] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
+  const [billingStatus, setBillingStatus] = useState("");
+  const [billingLoadingPlan, setBillingLoadingPlan] = useState("");
+  const [capturedPayPalOrder, setCapturedPayPalOrder] = useState("");
   const [projects, setProjects] = useState<WebsiteProject[]>([]);
   const [projectId, setProjectId] = useState("");
   const [website, setWebsite] = useState<WebsiteDocument>(starterWebsite);
@@ -670,6 +686,8 @@ function AppRoutes() {
 
   const selectedSection = website.sections.find((section) => section.id === selectedSectionId) || website.sections[0];
   const route = normalizePathname(location.pathname);
+  const search = location.search;
+  const selectedPages = briefPages(brief.pages);
   const publicPageKey = publicPageKeyFor(route);
   const publicExample = exampleCaseFor(route);
   const protectedRoute = protectedRouteFor(route);
@@ -794,6 +812,16 @@ function AppRoutes() {
     setBrief(nextBrief);
     const seo = key === "companyName" || key === "industry" || key === "location" ? seoFor(nextBrief) : website.seo;
     syncWebsite({ ...website, title: key === "companyName" ? String(value) : website.title, brief: nextBrief, seo, publishing: { ...website.publishing, subdomain: `${seo.slug}.dexhost.de` } });
+  }
+  function togglePage(page: string) {
+    if (requiredPages.has(page)) return;
+    const pages = selectedPages.includes(page) ? selectedPages.filter((item) => item !== page) : [...selectedPages, page];
+    updateBrief("pages", pageSummary(pages.join(", ")));
+  }
+  function addCustomPage(value: string) {
+    const page = cleanLabel(value);
+    if (!page) return;
+    updateBrief("pages", pageSummary([...selectedPages, page].join(", ")));
   }
 
   async function submitAuth(event: React.FormEvent) {
@@ -1036,6 +1064,40 @@ function AppRoutes() {
       setStatus(error instanceof Error ? error.message : "Publishing fehlgeschlagen.");
     }
   }
+  async function startPayPalCheckout(plan: AccountProfile["plan"]) {
+    setBillingLoadingPlan(plan);
+    setBillingStatus("");
+    try {
+      const response = await request<{ approvalUrl: string; orderId: string; plan: string }>("/api/billing/paypal/create", { method: "POST", body: JSON.stringify({ plan }) });
+      window.location.href = response.approvalUrl;
+    } catch (error) {
+      setBillingStatus(error instanceof Error ? error.message : "PayPal Checkout konnte nicht gestartet werden.");
+    } finally {
+      setBillingLoadingPlan("");
+    }
+  }
+  async function capturePayPalOrder(orderId: string) {
+    if (!orderId || capturedPayPalOrder === orderId) return;
+    setCapturedPayPalOrder(orderId);
+    setBillingStatus("PayPal-Zahlung wird geprüft...");
+    try {
+      const response = await request<{ profile: AccountProfile; plan: AccountProfile["plan"]; status: string }>("/api/billing/paypal/capture", { method: "POST", body: JSON.stringify({ orderId }) });
+      setSession((current) => current ? { ...current, profile: response.profile } : current);
+      setProfileForm(toProfileForm(response.profile));
+      setBillingStatus(`PayPal bestätigt. Tarif ${response.plan} ist aktiv.`);
+      routerNavigate("/billing", { replace: true });
+    } catch (error) {
+      setBillingStatus(error instanceof Error ? error.message : "PayPal-Zahlung konnte nicht bestätigt werden.");
+    }
+  }
+
+  useEffect(() => {
+    if (!session || route !== "/billing") return;
+    const params = new URLSearchParams(search);
+    const orderId = params.get("token");
+    if (params.get("paypal") === "success" && orderId) void capturePayPalOrder(orderId);
+    if (params.get("paypal") === "cancel") setBillingStatus("PayPal-Zahlung wurde abgebrochen.");
+  }, [session, route, search, capturedPayPalOrder]);
 
   if (publicExample) {
     return <ExampleDetailPage key={route} example={publicExample} session={session || null} currentPath={route} onNavigate={navigate} />;
@@ -1108,7 +1170,7 @@ function AppRoutes() {
     return (
       <main className="app-shell route-transition">
         {sidebar}
-        <BillingPage profile={session.profile} onBack={() => navigate("/dashboard")} />
+        <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} onBack={() => navigate("/dashboard")} onCheckout={(plan) => void startPayPalCheckout(plan)} />
       </main>
     );
   }
@@ -1145,7 +1207,16 @@ function AppRoutes() {
             <label>Stil<input value={brief.style} onChange={(event) => updateBrief("style", event.target.value)} /></label>
             <label>Farbpräferenz<input value={brief.colorPreference} onChange={(event) => updateBrief("colorPreference", event.target.value)} /></label>
             <label>Eigene Bilder<select value={brief.hasOwnImages} onChange={(event) => updateBrief("hasOwnImages", event.target.value as Brief["hasOwnImages"])}><option value="no">Nein</option><option value="yes">Ja</option></select></label>
-            <label>Seiten<input value={brief.pages} onChange={(event) => updateBrief("pages", event.target.value)} /></label>
+            <div className="page-selector">
+              <div>
+                <strong>Unterseiten</strong>
+                <span>{selectedPages.length} Seiten: {selectedPages.join(" / ")}</span>
+              </div>
+              <div className="page-chip-grid">
+                {pageOptions.map((page) => <button className={selectedPages.includes(page) ? "active" : ""} disabled={requiredPages.has(page)} key={page} onClick={() => togglePage(page)} type="button">{page}</button>)}
+              </div>
+              <label>Eigene Unterseite hinzufügen<input placeholder="z. B. Karriere, Kurse, Standorte" onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addCustomPage(event.currentTarget.value); event.currentTarget.value = ""; } }} /></label>
+            </div>
           </div>
           <div className="command-row">
             <button className="primary" onClick={generateWebsite} disabled={isGenerating}><Icon name="spark" />{isGenerating ? "Designing..." : "KI-Website generieren"}</button>
@@ -1491,27 +1562,38 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
   );
 }
 
-function BillingPage({ profile, onBack }: { profile: AccountProfile; onBack: () => void }) {
+function BillingPage({ profile, status, loadingPlan, onBack, onCheckout }: { profile: AccountProfile; status: string; loadingPlan: string; onBack: () => void; onCheckout: (plan: AccountProfile["plan"]) => void }) {
   return (
     <section className="workspace account-page">
       <header className="topbar">
         <div><strong>Abo & Billing</strong><span>/billing</span></div>
-        <div className="status-row"><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span><span>Serverseitig gesperrt</span></div>
+        <div className="status-row"><span>Plan: {profile.plan}</span><span>Status: {profile.account_status}</span><span>PayPal serverseitig</span></div>
       </header>
       <section className="account-hero">
         <div>
-          <h1>Tarif & Nutzung</h1>
-          <p>Planwechsel, Stripe-Daten und Premium-Rechte werden nicht im Frontend entschieden. Diese Seite zeigt den aktuellen Status und bereitet den serverseitigen Billing-Flow vor.</p>
+          <h1>Tarif & Zahlung</h1>
+          <p>Pakete werden über PayPal Checkout gestartet und erst nach serverseitiger Bestätigung freigeschaltet. Der Client kann keinen Tarif selbst setzen.</p>
         </div>
         <div className="account-actions"><button onClick={onBack}>Zurück ins Dashboard</button></div>
       </section>
+      {status && <p className={status.includes("bestätigt") || status.includes("aktiv") ? "form-message success" : "form-message error"}>{status}</p>}
       <section className="profile-grid">
-        {[
-          ["Free", "Entwerfen, bearbeiten und testen."],
-          ["Basic", "Subdomain-Publishing und SSL."],
-          ["Business", "Eigene Domains und erweiterte Assets."],
-          ["Pro", "Mehr Websites, Branding und Priorität."]
-        ].map(([name, body]) => <article className="profile-card" key={name}><h2>{name}</h2><p className="empty-note">{body}</p><button disabled={name.toLowerCase() === profile.plan}>{name.toLowerCase() === profile.plan ? "Aktueller Tarif" : "Serverseitig upgraden"}</button></article>)}
+        <article className="profile-card">
+          <h2>Free</h2>
+          <p className="empty-note">Entwerfen, bearbeiten und testen.</p>
+          <button disabled>{profile.plan === "free" ? "Aktueller Tarif" : "Kostenloser Tarif"}</button>
+        </article>
+        {paidPricingPlans.map((plan) => (
+          <article className="profile-card billing-plan" key={plan.id}>
+            <span>{plan.badge}</span>
+            <h2>{plan.name}</h2>
+            <strong>{plan.monthly} / Monat</strong>
+            <p className="empty-note">{plan.description}</p>
+            <button className={plan.featured ? "primary" : ""} disabled={profile.plan === plan.id || Boolean(loadingPlan)} onClick={() => onCheckout(plan.id)}>
+              {profile.plan === plan.id ? "Aktueller Tarif" : loadingPlan === plan.id ? "PayPal wird geöffnet..." : "Mit PayPal wählen"}
+            </button>
+          </article>
+        ))}
       </section>
     </section>
   );
