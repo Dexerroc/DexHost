@@ -68,7 +68,7 @@ type AuthSession = { authenticated: boolean; user: { id: string; email: string }
 type AuthMode = "login" | "register" | "forgot";
 type AuthForm = { email: string; password: string; displayName: string };
 type ProfileForm = Omit<AccountProfile, "id" | "email" | "plan" | "account_status" | "created_at" | "updated_at" | "last_login_at">;
-type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "impressum" | "datenschutz";
+type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "launchHelp" | "impressum" | "datenschutz";
 type PublicPageContent = { navLabel: string; title: string; intro: string; proof: string[]; sections: Array<{ title: string; body: string }> };
 type PricingPlan = {
   id: AccountProfile["plan"];
@@ -104,6 +104,7 @@ type ExampleCase = {
   pagePlan: Array<{ title: string; body: string }>;
 };
 type ProtectedRoute = { kind: "dashboard" | "profile" | "websites" | "new-website" | "editor" | "billing" | "billing-success" | "publish"; websiteId?: string };
+type LaunchService = { id: "launch-help" | "setup-service" | "premium-setup"; name: string; price: string; value: string; description: string; features: string[]; cta: string; featured?: boolean };
 
 declare global {
   interface Window {
@@ -132,6 +133,36 @@ const subscriptionPayPalButtonStyles: Partial<Record<AccountProfile["plan"], { s
   business: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" },
   pro: { shape: "rect", color: "black", layout: "horizontal", label: "subscribe" }
 };
+const launchServices: LaunchService[] = [
+  {
+    id: "launch-help",
+    name: "Launch-Hilfe",
+    price: "49 EUR",
+    value: "49.00",
+    description: "Ein kurzer professioneller Check vor dem Veröffentlichen.",
+    features: ["Struktur- und Farbcheck", "SEO-Grunddaten prüfen", "Subdomain-Veröffentlichung begleiten", "Konkrete To-do-Liste"],
+    cta: "Launch-Hilfe buchen"
+  },
+  {
+    id: "setup-service",
+    name: "Setup-Service",
+    price: "149 EUR",
+    value: "149.00",
+    description: "Gemeinsame Einrichtung für Kunden, die schneller zu einem sauberen Ergebnis wollen.",
+    features: ["Startseitenstruktur einrichten", "Branding-Farben abstimmen", "Kontaktformular vorbereiten", "Domain-Vorbereitung"],
+    cta: "Setup buchen",
+    featured: true
+  },
+  {
+    id: "premium-setup",
+    name: "Premium-Setup",
+    price: "349 EUR",
+    value: "349.00",
+    description: "Mehr Feinschliff für stärkere Bildsprache, Seitenstruktur und Launch-Qualität.",
+    features: ["Mehrseitige Struktur schärfen", "Asset-Briefing und Bildsprache", "SEO-Feinschliff", "Launch-Abnahme"],
+    cta: "Premium-Setup buchen"
+  }
+];
 const emptyProfileForm: ProfileForm = {
   display_name: "",
   first_name: "",
@@ -241,6 +272,17 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
       { title: "Projektanfrage", body: "Beschreibe Branche, Zielgruppe, Stil und vorhandene Bilder." },
       { title: "Technik", body: "Netlify Hosting, Functions, Blobs und Deploys halten die Plattform schlank." },
       { title: "Launch", body: "Kostenlose Subdomain zuerst, eigene Domain später als Premium-Funktion." }
+    ]
+  },
+  launchHelp: {
+    navLabel: "Launch-Hilfe",
+    title: "Einmalige Launch-Hilfe, wenn es schneller professionell wirken soll.",
+    intro: "Die monatlichen Tarife bleiben selbst bedienbar. Wer weniger Zeit investieren möchte, bucht einmalig Hilfe für Check, Setup oder Premium-Feinschliff.",
+    proof: ["Einmalzahlung", "PayPal serverseitig geprüft", "Keine Pflicht-Einrichtung"],
+    sections: [
+      { title: "Launch-Hilfe", body: "Kurzer Check von Struktur, Farben, SEO-Grunddaten und Veröffentlichung." },
+      { title: "Setup-Service", body: "Geführte Einrichtung mit Branding, Startseite, Kontaktformular und Domain-Vorbereitung." },
+      { title: "Premium-Setup", body: "Mehr Tiefe bei Seitenstruktur, Bildsprache, Assets und Launch-Abnahme." }
     ]
   },
   impressum: {
@@ -520,6 +562,7 @@ function publicPageKeyFor(pathname: string): PublicPageKey | null {
     "/examples": "examples",
     "/faq": "faq",
     "/contact": "contact",
+    "/launch-hilfe": "launchHelp",
     "/impressum": "impressum",
     "/datenschutz": "datenschutz"
   };
@@ -719,6 +762,9 @@ function AppRoutes() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [billingStatus, setBillingStatus] = useState("");
   const [billingLoadingPlan, setBillingLoadingPlan] = useState("");
+  const [launchPaymentStatus, setLaunchPaymentStatus] = useState("");
+  const [launchPaymentLoading, setLaunchPaymentLoading] = useState("");
+  const [capturedLaunchOrder, setCapturedLaunchOrder] = useState("");
   const [projects, setProjects] = useState<WebsiteProject[]>([]);
   const [projectId, setProjectId] = useState("");
   const [website, setWebsite] = useState<WebsiteDocument>(starterWebsite);
@@ -735,6 +781,7 @@ function AppRoutes() {
 
   const selectedSection = website.sections.find((section) => section.id === selectedSectionId) || website.sections[0];
   const route = normalizePathname(location.pathname);
+  const search = location.search;
   const selectedPages = briefPages(brief.pages);
   const publicPageKey = publicPageKeyFor(route);
   const publicExample = exampleCaseFor(route);
@@ -1128,9 +1175,55 @@ function AppRoutes() {
       setBillingLoadingPlan("");
     }
   }
+  async function startLaunchServiceCheckout(serviceId: LaunchService["id"]) {
+    if (!session) {
+      setLaunchPaymentStatus("Bitte erst registrieren oder einloggen, damit DexHost die Zahlung deinem Account zuordnen kann.");
+      navigate("/register");
+      return;
+    }
+    setLaunchPaymentLoading(serviceId);
+    setLaunchPaymentStatus("");
+    try {
+      const response = await request<{ approvalUrl: string; orderId: string; serviceId: string }>("/api/billing/paypal/setup/create", { method: "POST", body: JSON.stringify({ serviceId }) });
+      window.location.href = response.approvalUrl;
+    } catch (error) {
+      setLaunchPaymentStatus(error instanceof Error ? error.message : "PayPal-Zahlung konnte nicht gestartet werden.");
+    } finally {
+      setLaunchPaymentLoading("");
+    }
+  }
+  async function captureLaunchServiceOrder(orderId: string) {
+    if (!orderId || capturedLaunchOrder === orderId) return;
+    setCapturedLaunchOrder(orderId);
+    setBillingStatus("Einmalzahlung wird serverseitig geprüft...");
+    try {
+      const response = await request<{ service: LaunchService; status: string; orderId: string }>("/api/billing/paypal/setup/capture", { method: "POST", body: JSON.stringify({ orderId }) });
+      setBillingStatus(`Einmalzahlung bestätigt. ${response.service.name} ist gebucht.`);
+      routerNavigate(`/billing/success?setup=${encodeURIComponent(response.service.id)}`, { replace: true });
+    } catch (error) {
+      setBillingStatus(error instanceof Error ? error.message : "Einmalzahlung konnte nicht bestätigt werden.");
+    }
+  }
+
+  useEffect(() => {
+    if (!session || route !== "/billing/success") return;
+    const params = new URLSearchParams(search);
+    const orderId = params.get("token");
+    if (params.get("setup") === "success" && orderId) void captureLaunchServiceOrder(orderId);
+  }, [session, route, search, capturedLaunchOrder]);
+
+  useEffect(() => {
+    if (route !== "/launch-hilfe") return;
+    const params = new URLSearchParams(search);
+    if (params.get("payment") === "cancel") setLaunchPaymentStatus("PayPal-Zahlung wurde abgebrochen.");
+  }, [route, search]);
 
   if (publicExample) {
     return <ExampleDetailPage key={route} example={publicExample} session={session || null} currentPath={route} onNavigate={navigate} />;
+  }
+
+  if (publicPageKey === "launchHelp") {
+    return <LaunchHelpPage session={session || null} currentPath={route} status={launchPaymentStatus} loadingService={launchPaymentLoading} onNavigate={navigate} onCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} />;
   }
 
   if (publicPageKey) {
@@ -1296,7 +1389,7 @@ function ProtectedLoading({ message }: { message: string }) {
 }
 
 function PublicNav({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
-  const links: Array<[string, string]> = [["Features", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
+  const links: Array<[string, string]> = [["Features", "/features"], ["Beispiele", "/examples"], ["Preise", "/pricing"], ["Launch-Hilfe", "/launch-hilfe"], ["FAQ", "/faq"], ["Kontakt", "/contact"]];
   const currentExample = exampleCaseFor(currentPath);
   const websitePreviewPath = currentExample ? `/examples/${currentExample.slug}` : `/examples/${exampleCases[0].slug}`;
   const isActive = (path: string) => currentPath === path || (path === "/examples" && currentPath.startsWith("/examples/"));
@@ -1512,6 +1605,65 @@ function PublicPage({ pageKey, session, currentPath, onNavigate }: { pageKey: Pu
   );
 }
 
+function LaunchHelpPage({ session, currentPath, status, loadingService, onNavigate, onCheckout }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onNavigate: (path: string) => void; onCheckout: (serviceId: LaunchService["id"]) => void }) {
+  return (
+    <main className="public-shell pricing-shell route-transition">
+      <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
+      <section className="pricing-hero launch-hero">
+        <div>
+          <span className="pricing-kicker">Einmalige Launch-Hilfe</span>
+          <h1>Professionelle Unterstützung ohne laufende Zusatzkosten.</h1>
+          <p>Die Tarife bleiben monatlich planbar. Launch-Hilfe, Setup und Premium-Setup sind separate Einmalzahlungen für Kunden, die beim Start schneller zu einem sauberen Ergebnis wollen.</p>
+          <div className="public-cta-row">
+            <button className="primary" onClick={() => onNavigate(session ? "/dashboard" : "/register")}>{session ? "Dashboard öffnen" : "Kostenlos starten"}</button>
+            <button onClick={() => onNavigate("/pricing")}>Tarife ansehen</button>
+          </div>
+        </div>
+        <aside className="pricing-note">
+          <strong>Keine Pflicht-Einrichtung</strong>
+          <p>Du kannst DexHost vollständig selbst nutzen. Die Setup-Leistungen sind nur für Kunden gedacht, die Zeit sparen oder einen geführten Launch möchten.</p>
+          <span>Einmalzahlung über PayPal</span>
+        </aside>
+      </section>
+
+      {status && <p className={status.includes("konnte") || status.includes("Bitte") ? "form-message error launch-message" : "form-message success launch-message"}>{status}</p>}
+
+      <section className="pricing-band">
+        <div className="public-section-head">
+          <h2>Setup-Leistungen</h2>
+          <p>Klare Pakete für unterschiedliche Situationen: kurzer Check, geführte Einrichtung oder intensiver Premium-Feinschliff.</p>
+        </div>
+        <div className="pricing-grid launch-service-grid">
+          {launchServices.map((service) => (
+            <article className={service.featured ? "pricing-card featured" : "pricing-card"} key={service.id}>
+              <div className="pricing-card-head">
+                <span>{service.id === "launch-help" ? "Schneller Check" : service.id === "setup-service" ? "Geführter Start" : "Mehr Feinschliff"}</span>
+                <h3>{service.name}</h3>
+                <p>{service.description}</p>
+              </div>
+              <div className="pricing-money">
+                <div><small>Einmalig</small><strong>{service.price}</strong><span>zzgl. USt.</span></div>
+              </div>
+              <ul className="pricing-feature-list">
+                {service.features.map((feature) => <li key={feature}>{feature}</li>)}
+              </ul>
+              <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
+                {loadingService === service.id ? "PayPal wird geöffnet..." : service.cta}
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="pricing-faq launch-faq">
+        <article><h3>Brauche ich dafür einen Account?</h3><p>Ja. Die Zahlung wird deinem DexHost Account zugeordnet, damit Support und gebuchte Leistung sauber nachvollziehbar bleiben.</p></article>
+        <article><h3>Ändert das meinen Tarif?</h3><p>Nein. Einmalige Setup-Leistungen ersetzen kein Monatsabo und ändern keine Planrechte im Frontend.</p></article>
+        <article><h3>Was passiert nach der Zahlung?</h3><p>DexHost prüft PayPal serverseitig, speichert die Buchung und zeigt dir eine Bestätigung auf der Zahlungsseite.</p></article>
+      </section>
+    </main>
+  );
+}
+
 function PricingPage({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
   const billingTarget = session ? "/billing" : "/register";
   return (
@@ -1567,15 +1719,14 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         </div>
         <div className="pricing-table">
           {[
-            ["DIY", "0 EUR", "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Publishing erlaubt."],
-            ["Launch-Hilfe", "49 EUR", "Kurzer Check von Struktur, Farben, SEO-Grunddaten und Veröffentlichung auf Subdomain."],
-            ["Setup-Service", "149 EUR", "Gemeinsame Einrichtung mit Branding, Startseitenstruktur, Kontaktformular und Domain-Vorbereitung."],
-            ["Premium-Setup", "349 EUR", "Individuellere Seitenstruktur, Asset-Briefing, stärkere Bildsprache und Launch-Feinschliff."]
-          ].map(([name, price, body]) => (
+            { name: "DIY", price: "0 EUR", body: "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Publishing erlaubt.", serviceId: "" },
+            ...launchServices.map((service) => ({ name: service.name, price: service.price, body: service.description, serviceId: service.id }))
+          ].map(({ name, price, body, serviceId }) => (
             <article key={name}>
               <h3>{name}</h3>
               <strong>{price}</strong>
               <p>{body}</p>
+              {serviceId && <button onClick={() => onNavigate("/launch-hilfe")}>Einmalzahlung ansehen</button>}
             </article>
           ))}
         </div>
@@ -1651,6 +1802,7 @@ function PayPalSubscriptionButton({ planName, planId, buttonStyle, onApprove }: 
 }
 
 function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profile: AccountProfile; status: string; onBilling: () => void; onDashboard: () => void }) {
+  const isSetupPayment = status.includes("Einmalzahlung");
   const isConfirmed = status.includes("bestätigt") || status.includes("aktiv") || ["basic", "business", "pro", "admin"].includes(profile.plan);
   return (
     <section className="workspace account-page payment-success-page">
@@ -1661,8 +1813,8 @@ function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profi
       <section className="account-hero payment-success-hero">
         <div>
           <span className={isConfirmed ? "success-pill" : "success-pill pending"}>{isConfirmed ? "Bestätigt" : "Wird geprüft"}</span>
-          <h1>{isConfirmed ? "Dein Tarif ist aktiv." : "Zahlung wird geprüft."}</h1>
-          <p>{isConfirmed ? "PayPal wurde serverseitig bestätigt. Du kannst jetzt zurück ins Studio und die freigeschalteten DexHost-Funktionen nutzen." : "Falls PayPal dich gerade zurückgeleitet hat, prüft DexHost die Zahlung im Hintergrund. Lade die Seite nicht mehrfach neu."}</p>
+          <h1>{isSetupPayment ? "Deine Launch-Hilfe ist gebucht." : isConfirmed ? "Dein Tarif ist aktiv." : "Zahlung wird geprüft."}</h1>
+          <p>{isSetupPayment ? "PayPal wurde serverseitig bestätigt. Die Buchung ist deinem DexHost Account zugeordnet." : isConfirmed ? "PayPal wurde serverseitig bestätigt. Du kannst jetzt zurück ins Studio und die freigeschalteten DexHost-Funktionen nutzen." : "Falls PayPal dich gerade zurückgeleitet hat, prüft DexHost die Zahlung im Hintergrund. Lade die Seite nicht mehrfach neu."}</p>
         </div>
         <div className="account-actions">
           <button onClick={onBilling}>Tarife ansehen</button>

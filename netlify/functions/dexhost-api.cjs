@@ -23,6 +23,11 @@ const billingPlans = {
   business: { name: "Business", value: "19.00", currency: "EUR" },
   pro: { name: "Pro", value: "49.00", currency: "EUR" }
 };
+const launchServices = {
+  "launch-help": { id: "launch-help", name: "Launch-Hilfe", value: "49.00", currency: "EUR" },
+  "setup-service": { id: "setup-service", name: "Setup-Service", value: "149.00", currency: "EUR" },
+  "premium-setup": { id: "premium-setup", name: "Premium-Setup", value: "349.00", currency: "EUR" }
+};
 const subscriptionPlanIds = {
   basic: process.env.PAYPAL_BASIC_SUBSCRIPTION_PLAN_ID || "P-75N62518ED122145SNILXN2Y",
   business: process.env.PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
@@ -1089,6 +1094,69 @@ async function capturePayPalOrder(auth, orderId) {
   return { profile, plan: pending.plan, status: captured.status };
 }
 
+async function createPayPalSetupOrder(auth, event, serviceId) {
+  const service = launchServices[serviceId];
+  if (!service) {
+    const error = new Error("Bitte wähle Launch-Hilfe, Setup-Service oder Premium-Setup.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const origin = originFor(event);
+  const order = await paypalRequest("/v2/checkout/orders", {
+    method: "POST",
+    body: {
+      intent: "CAPTURE",
+      purchase_units: [{
+        reference_id: `dexhost-${service.id}`,
+        custom_id: auth.userId,
+        description: `DexHost ${service.name} - Einmalzahlung`,
+        amount: { currency_code: service.currency, value: service.value }
+      }],
+      application_context: {
+        brand_name: "DexHost",
+        landing_page: "LOGIN",
+        user_action: "PAY_NOW",
+        return_url: `${origin}/billing/success?setup=success`,
+        cancel_url: `${origin}/launch-hilfe?payment=cancel`
+      }
+    }
+  });
+  const approvalUrl = (order.links || []).find((link) => link.rel === "approve")?.href;
+  if (!approvalUrl) {
+    const error = new Error("PayPal konnte keinen Freigabe-Link erstellen.");
+    error.statusCode = 502;
+    throw error;
+  }
+  await blobSetJson(`billing/paypal/setup-orders/${order.id}.json`, { id: order.id, user_id: auth.userId, service_id: service.id, amount: service.value, currency: service.currency, status: "created", created_at: now() });
+  return { orderId: order.id, approvalUrl, serviceId: service.id };
+}
+
+async function capturePayPalSetupOrder(auth, orderId) {
+  const pending = await blobGetJson(`billing/paypal/setup-orders/${orderId}.json`);
+  if (!pending || pending.user_id !== auth.userId) {
+    const error = new Error("PayPal-Einmalzahlung wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const service = launchServices[pending.service_id];
+  if (!service) {
+    const error = new Error("Gebuchte Launch-Leistung wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (pending.status === "completed") return { service, status: "completed", orderId };
+  const captured = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, { method: "POST", body: {} });
+  if (captured.status !== "COMPLETED") {
+    const error = new Error("PayPal-Einmalzahlung ist noch nicht abgeschlossen.");
+    error.statusCode = 402;
+    throw error;
+  }
+  const completed = { ...pending, status: "completed", paypal_status: captured.status, captured_at: now() };
+  await blobSetJson(`billing/paypal/setup-orders/${orderId}.json`, completed);
+  await blobSetJson(`billing/setup-purchases/${auth.userId}/${orderId}.json`, { ...completed, service });
+  return { service, status: captured.status, orderId };
+}
+
 async function activatePayPalSubscription(auth, plan, subscriptionId) {
   const selected = billingPlans[plan];
   if (!selected) {
@@ -1224,6 +1292,16 @@ exports.handler = async (event, context) => {
       const body = bodyJson(event);
       const result = await activatePayPalSubscription(auth, clean(body.plan).toLowerCase(), clean(body.subscriptionId));
       return json(200, { ...result, profile: profileOut(result.profile, auth.user) }, auth.cookies);
+    }
+
+    if (method === "POST" && path === "/api/billing/paypal/setup/create") {
+      const checkout = await createPayPalSetupOrder(auth, event, clean(bodyJson(event).serviceId).toLowerCase());
+      return json(201, checkout, auth.cookies);
+    }
+
+    if (method === "POST" && path === "/api/billing/paypal/setup/capture") {
+      const result = await capturePayPalSetupOrder(auth, clean(bodyJson(event).orderId));
+      return json(200, result, auth.cookies);
     }
 
     if (method === "GET" && (path === "/api/account" || path === "/api/profile")) {

@@ -44,6 +44,7 @@ Geschuetzte UI-Routen:
 
 - `/dashboard/profile`
 - `/account`
+- `/launch-hilfe`
 
 Public:
 
@@ -80,6 +81,9 @@ Protected Studio:
 - `POST /api/websites/:id/domain`
 - `POST /api/websites/ai-studio-plan`
 - `POST /api/websites/asset-plan`
+- `POST /api/billing/paypal/subscription/activate`
+- `POST /api/billing/paypal/setup/create`
+- `POST /api/billing/paypal/setup/capture`
 
 ## Environment
 
@@ -107,7 +111,7 @@ IMAGE_UPLOAD_MAX_BYTES=5242880
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
-PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
+PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Launch-Hilfe, Setup-Service und Premium-Setup laufen als separate Einmalzahlungen ueber `/launch-hilfe`; auch diese Zahlungen werden erst nach serverseitigem PayPal Capture als gebucht gespeichert. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
 
 ## Entwicklung
 
