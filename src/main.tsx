@@ -74,7 +74,6 @@ type PricingPlan = {
   id: AccountProfile["plan"];
   name: string;
   badge: string;
-  setup: string;
   monthly: string;
   description: string;
   audience: string;
@@ -247,10 +246,9 @@ const pricingPlans: PricingPlan[] = [
     id: "free",
     name: "Free",
     badge: "Zum Ausprobieren",
-    setup: "0 EUR",
     monthly: "0 EUR",
     description: "Für erste Entwürfe, Briefings und interne Tests im DexHost Studio.",
-    audience: "Ideal, wenn du Designrichtung, Struktur und Inhalte erst sauber vorbereiten willst.",
+    audience: "Du kannst die Website selbst einrichten, Texte ändern, Farben wählen und Layouts testen.",
     features: ["KI-Briefing und Website-Struktur", "Block-Editor mit Layout-Varianten", "Farben, Texte und SEO bearbeiten", "Eigene Bilder im Entwurf testen"],
     limits: ["Kein öffentliches Publishing", "Keine eigene Domain", "DexHost Wasserzeichen in Vorschauen"],
     cta: "Kostenlos starten"
@@ -258,12 +256,11 @@ const pricingPlans: PricingPlan[] = [
   {
     id: "basic",
     name: "Basic",
-    badge: "Für den ersten Launch",
-    setup: "149 EUR",
-    monthly: "19 EUR",
-    description: "Für kleine Firmen, lokale Anbieter und Selbstständige, die schnell professionell online gehen wollen.",
-    audience: "Gute Wahl für klare Onepager oder kompakte Firmenwebsites mit eigener Subdomain.",
-    features: ["Alles aus Free", "Publishing auf DexHost Subdomain", "SSL automatisch", "Kontaktformular über Netlify Forms", "Bis zu 3 Websites", "Bis zu 250 MB Bildspeicher"],
+    badge: "Günstiger Start",
+    monthly: "9 EUR",
+    description: "Für Nutzer, die ihre Website selbst bauen und regelmäßig speichern möchten.",
+    audience: "Verhältnismäßiger Einstieg für Selbstständige, kleine Projekte und erste Firmenwebsites.",
+    features: ["Alles aus Free", "Projekte dauerhaft speichern", "Website-Vorschau teilen", "Kontaktformular vorbereiten", "Bis zu 2 Websites", "Bis zu 250 MB Bildspeicher"],
     limits: ["Eigene Domain nicht enthalten", "Basis-Support per E-Mail"],
     cta: "Basic starten"
   },
@@ -271,11 +268,10 @@ const pricingPlans: PricingPlan[] = [
     id: "business",
     name: "Business",
     badge: "Beliebt",
-    setup: "349 EUR",
-    monthly: "49 EUR",
-    description: "Für Firmenwebsites mit stärkerem Branding, mehr Seiten, mehr Assets und professioneller Außenwirkung.",
-    audience: "Für Kanzleien, Praxen, Agenturen, Immobilienanbieter, Handwerk und wachsende Dienstleister.",
-    features: ["Alles aus Basic", "Eigene Domain vorbereiten", "Mehrseitige Website-Struktur", "Erweiterte Branding-Farben", "Canva-/Asset-Briefings", "Bis zu 10 Websites", "Bis zu 2 GB Bildspeicher"],
+    monthly: "19 EUR",
+    description: "Für echte Firmenwebsites mit Publishing, Subdomain, SSL und stärkerem Branding.",
+    audience: "Der beste Standardtarif, wenn die Website öffentlich und professionell nutzbar sein soll.",
+    features: ["Alles aus Basic", "Publishing auf DexHost Subdomain", "SSL automatisch", "Mehrseitige Website-Struktur", "Erweiterte Branding-Farben", "Bis zu 5 Websites", "Bis zu 1 GB Bildspeicher"],
     limits: ["Domainkosten extern", "Individuelle Texte nach Aufwand"],
     cta: "Business wählen",
     featured: true
@@ -283,14 +279,13 @@ const pricingPlans: PricingPlan[] = [
   {
     id: "pro",
     name: "Pro",
-    badge: "Für Agentur-Niveau",
-    setup: "799 EUR",
-    monthly: "99 EUR",
-    description: "Für hochwertige Markenauftritte mit mehreren Landingpages, Premium-Assets und stärkerem Designsystem.",
-    audience: "Für Teams, Anbieter mit Kampagnenbedarf und Kunden, die einen sehr individuellen Auftritt wollen.",
-    features: ["Alles aus Business", "Priorisierte Designvorschläge", "Mehrere Landingpages", "Erweiterte Asset-Liste", "Trust-Elemente und Vergleichssections", "Bis zu 25 Websites", "Bis zu 10 GB Bildspeicher"],
+    badge: "Mehr Kontrolle",
+    monthly: "49 EUR",
+    description: "Für Teams, mehrere Websites, eigene Domain-Vorbereitung und umfangreichere Assets.",
+    audience: "Für Kunden, die selbst arbeiten möchten, aber mehr Spielraum und professionellere Workflows brauchen.",
+    features: ["Alles aus Business", "Eigene Domain vorbereiten", "Mehrere Landingpages", "Erweiterte Asset-Liste", "Trust-Elemente und Vergleichssections", "Bis zu 15 Websites", "Bis zu 5 GB Bildspeicher"],
     limits: ["Externe Lizenzen separat", "Custom-Integrationen nach Angebot"],
-    cta: "Pro anfragen"
+    cta: "Pro wählen"
   }
 ];
 
@@ -569,7 +564,7 @@ function content(type: SectionType, brief: Brief): Record<string, string> {
     hero: { headline: `${brief.companyName} zeigt ${brief.industry} klar, hochwertig und direkt anfragbar.`, body: `Ein professioneller Auftritt für ${brief.audience} in ${brief.location}. DexHost erzeugt die Struktur, Sie behalten die Kontrolle.`, primaryCta: "Beratung anfragen", secondaryCta: "Leistungen ansehen" },
     about: { heading: `Warum ${brief.companyName}`, body: "Zeigen Sie Haltung, Erfahrung und Arbeitsweise in einer Geschichte, die Vertrauen schafft.", stats: "Klare Positionierung\nSchnelle Abstimmung\nPremium Eindruck" },
     services: { heading: "Leistungen mit Struktur", intro: "Besucher verstehen sofort, was Sie anbieten und welcher nächste Schritt sinnvoll ist.", items: "Beratung und Strategie\nUmsetzung und Betreuung\nContent und SEO\nLaunch und Optimierung" },
-    pricing: { heading: "Pakete für klare Entscheidungen", intro: "Transparente Optionen helfen beim Vergleich.", plans: "Start | 499 EUR | Struktur, Basisseiten, Launch\nGrowth | 1290 EUR | Designsystem, SEO, Bilder\nPremium | 2490 EUR | Individuelle Website, Assets, Feinschliff" },
+    pricing: { heading: "Pakete für klare Entscheidungen", intro: "Transparente Optionen helfen beim Vergleich.", plans: "Basic | 9 EUR mtl. | Editor, Speichern, Vorschau\nBusiness | 19 EUR mtl. | Publishing, SSL, Branding\nPro | 49 EUR mtl. | Domain-Vorbereitung, mehr Assets, Premium-Workflows" },
     gallery: { heading: "Bildsprache, die zur Firma passt", intro: "Eigene Bilder zuerst. Fehlende Motive werden geplant und als verwendbar markiert.", captions: "Arbeitsprozess\nDetailaufnahme\nKundenerlebnis\nErgebnis" },
     testimonials: { heading: "Vertrauen durch echte Stimmen", quotes: "Kunde A: Sehr professionell und klar.\nKunde B: Der Auftritt wirkt deutlich hochwertiger.\nKunde C: Schnell, strukturiert und angenehm." },
     faq: { heading: "Häufige Fragen", questions: "Wie schnell geht der Start? Meist innerhalb weniger Tage.\nKann ich eigene Bilder nutzen? Ja, eigene Bilder haben Vorrang.\nKann ich später eine Domain verbinden? Ja, mit automatischem SSL." },
@@ -1416,16 +1411,16 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
         <div>
           <span className="pricing-kicker">DexHost Preise</span>
           <h1>Professionelles AI Website Studio mit klaren Tarifen.</h1>
-          <p>Starte kostenlos mit Entwurf und Editor. Publishing, Domains, Speicher und Premium-Funktionen werden serverseitig über den aktiven Tarif freigeschaltet.</p>
+          <p>Starte kostenlos und richte deine Website selbst ein. Monatliche Tarife schalten Speicher, Publishing, Branding und professionelle Workflows serverseitig frei.</p>
           <div className="public-cta-row">
             <button className="primary" onClick={() => onNavigate("/register")}>Kostenlos starten</button>
             <button onClick={() => onNavigate(session ? "/dashboard" : "/login")}>Baukasten öffnen</button>
           </div>
         </div>
         <aside className="pricing-note">
-          <strong>Transparenz vor Vertragsbindung</strong>
-          <p>Alle Preise verstehen sich zzgl. USt. Domainkosten, externe Lizenzen und individuelle Sonderwünsche werden separat ausgewiesen.</p>
-          <span>Serverseitige Planprüfung über Netlify Functions</span>
+          <strong>Einrichtung ist optional</strong>
+          <p>Du kannst deine Website vollständig selbst einrichten. Wer Hilfe möchte, bucht einen separaten Setup-Service für Struktur, Branding, Domain und Launch.</p>
+          <span>Faire Monatspläne statt Pflicht-Einrichtungsgebühr</span>
         </aside>
       </section>
 
@@ -1443,8 +1438,7 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
                 <p>{plan.description}</p>
               </div>
               <div className="pricing-money">
-                <div><small>Einrichtung</small><strong>{plan.setup}</strong></div>
-                <div><small>Monatlich</small><strong>{plan.monthly}</strong></div>
+                <div><small>Monatlich</small><strong>{plan.monthly}</strong><span>zzgl. USt.</span></div>
               </div>
               <p className="pricing-audience">{plan.audience}</p>
               <ul className="pricing-feature-list">
@@ -1458,14 +1452,20 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
 
       <section className="pricing-compare">
         <div>
-          <h2>Was ist enthalten?</h2>
-          <p>Die Limits sind bewusst einfach gehalten, damit der MVP schlank bleibt und später sauber mit Stripe erweitert werden kann.</p>
+          <h2>Optionale Einrichtung</h2>
+          <p>Die Plattform bleibt selbst bedienbar. Einrichtung ist ein zusätzlicher Service, wenn ein Kunde weniger Zeit investieren oder einen sauber geführten Launch möchte.</p>
         </div>
         <div className="pricing-table">
-          {pricingPlans.map((plan) => (
-            <article key={plan.id}>
-              <h3>{plan.name}</h3>
-              {plan.limits.map((item) => <p key={item}>{item}</p>)}
+          {[
+            ["DIY", "0 EUR", "Website selbst erstellen, Bilder hochladen, Texte bearbeiten und veröffentlichen, sofern der Tarif Publishing erlaubt."],
+            ["Launch-Hilfe", "49 EUR", "Kurzer Check von Struktur, Farben, SEO-Grunddaten und Veröffentlichung auf Subdomain."],
+            ["Setup-Service", "149 EUR", "Gemeinsame Einrichtung mit Branding, Startseitenstruktur, Kontaktformular und Domain-Vorbereitung."],
+            ["Premium-Setup", "349 EUR", "Individuellere Seitenstruktur, Asset-Briefing, stärkere Bildsprache und Launch-Feinschliff."]
+          ].map(([name, price, body]) => (
+            <article key={name}>
+              <h3>{name}</h3>
+              <strong>{price}</strong>
+              <p>{body}</p>
             </article>
           ))}
         </div>
@@ -1473,9 +1473,9 @@ function PricingPage({ session, currentPath, onNavigate }: { session: AuthSessio
 
       <section className="pricing-faq">
         {[
-          ["Kann ich kostenlos starten?", "Ja. Free reicht für Entwurf, Struktur, Texte und Editor-Test. Öffentliches Publishing braucht einen aktiven Paid-Plan."],
+          ["Kann ich alles selbst einrichten?", "Ja. DexHost ist so gebaut, dass Nutzer Texte, Bilder, Farben, Sections, SEO und Publishing selbst steuern können."],
           ["Kann ich später upgraden?", "Ja. Planrechte werden nicht im Frontend gespeichert, sondern serverseitig geprüft und können später sauber mit Stripe verbunden werden."],
-          ["Sind eigene Domains möglich?", "Ja, ab Business vorbereitet. DNS und SSL laufen über Netlify, Domainkosten bleiben separat."]
+          ["Warum gibt es trotzdem Setup-Services?", "Manche Kunden wollen Zeit sparen oder einen geführten Launch. Deshalb ist Einrichtung optional und nicht Voraussetzung."]
         ].map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}
       </section>
 

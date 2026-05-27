@@ -496,11 +496,11 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
   color: #c9d4e2;
 }
 .pricing-money {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .6rem;
+  display: block;
 }
 .pricing-money div {
+  display: grid;
+  gap: .15rem;
   border: 1px solid rgba(16, 24, 32, .1);
   border-radius: 8px;
   background: #f7f8f4;
@@ -518,7 +518,12 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
 .pricing-money strong {
   display: block;
   margin-top: .25rem;
-  font-size: 1.55rem;
+  font-size: 2.1rem;
+}
+.pricing-money span {
+  color: #6f7d7a;
+  font-size: .78rem;
+  font-weight: 900;
 }
 .pricing-audience {
   font-size: .93rem;
@@ -593,6 +598,12 @@ svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width:
 }
 .pricing-table h3, .pricing-faq h3 {
   margin: 0 0 .7rem;
+}
+.pricing-table strong {
+  display: block;
+  margin-bottom: .55rem;
+  color: #101820;
+  font-size: 1.45rem;
 }
 .pricing-table p + p {
   margin-top: .45rem;
