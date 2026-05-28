@@ -1528,6 +1528,49 @@ async function capturePayPalSetupOrder(auth, orderId) {
   return { service, status: captured.status, orderId };
 }
 
+async function recordPendingPayPalSubscription(auth, plan, subscriptionId, reason = "paypal-api-not-configured") {
+  const selected = billingPlans[plan];
+  if (!selected) {
+    const error = new Error("Bitte wähle Basic, Business oder Pro.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!subscriptionId) {
+    const error = new Error("PayPal Abo-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const expectedPlanId = subscriptionPlanIds[plan] || "";
+  const row = {
+    id: subscriptionId,
+    user_id: auth.userId,
+    plan,
+    paypal_plan_id: expectedPlanId,
+    status: "PENDING_VERIFICATION",
+    billing_status: "pending_verification",
+    reason,
+    created_at: now(),
+    updated_at: now()
+  };
+  await blobSetJson(`billing/paypal/subscriptions/${subscriptionId}.json`, row);
+  await blobSetJson(`billing/paypal/pending-subscriptions/${auth.userId}/${subscriptionId}.json`, row);
+  const profile = await ensureProfile(auth);
+  const next = {
+    ...profile,
+    plan: profile.plan === "admin" ? "admin" : "free",
+    billing_provider: "paypal-subscription",
+    billing_status: "pending_verification",
+    billing_reference: subscriptionId,
+    paypal_subscription_id: subscriptionId,
+    subscription_status: "pending_verification",
+    subscription_current_period_end: profile.subscription_current_period_end || "",
+    subscription_last_event: "client-pending",
+    updated_at: now()
+  };
+  await blobSetJson(`profiles/${auth.userId}.json`, next);
+  return { profile: next, plan, status: "pending_verification", subscriptionId };
+}
+
 async function activatePayPalSubscription(auth, plan, subscriptionId) {
   const selected = billingPlans[plan];
   if (!selected) {
@@ -1539,6 +1582,9 @@ async function activatePayPalSubscription(auth, plan, subscriptionId) {
     const error = new Error("PayPal Abo-ID fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    return recordPendingPayPalSubscription(auth, plan, subscriptionId);
   }
   const subscription = await paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
   const expectedPlanId = subscriptionPlanIds[plan];

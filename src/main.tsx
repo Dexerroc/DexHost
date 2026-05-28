@@ -1334,12 +1334,13 @@ function AppRoutes() {
   }
   async function activatePayPalSubscription(plan: AccountProfile["plan"], subscriptionId: string) {
     setBillingLoadingPlan(plan);
-    setBillingStatus("PayPal-Abo wird serverseitig geprüft...");
+    setBillingStatus("PayPal-Abo wird serverseitig gespeichert...");
     try {
       const response = await request<{ profile: AccountProfile; plan: AccountProfile["plan"]; status: string; subscriptionId: string }>("/api/billing/paypal/subscription/activate", { method: "POST", body: JSON.stringify({ plan, subscriptionId }) });
       setSession((current) => current ? { ...current, profile: response.profile } : current);
       setProfileForm(toProfileForm(response.profile));
-      setBillingStatus(`PayPal-Abo bestätigt. Tarif ${planLabel(response.plan)} ist aktiv.`);
+      const status = response.status.toLowerCase();
+      setBillingStatus(status === "active" ? `PayPal-Abo bestätigt. Tarif ${planLabel(response.plan)} ist aktiv.` : `PayPal-Abo wurde gespeichert. Tarif ${planLabel(response.plan)} wird freigeschaltet, sobald die Zahlung geprüft ist.`);
       routerNavigate(`/billing/success?subscription=${encodeURIComponent(response.subscriptionId)}`, { replace: true });
     } catch (error) {
       setBillingStatus(error instanceof Error ? error.message : "PayPal-Abo konnte nicht bestätigt werden.");
@@ -1898,8 +1899,8 @@ function PayPalHostedOneTimeButton({ serviceName, hostedButtonId }: { serviceNam
 function PaymentSetupNotice({ environment }: { environment: string }) {
   return (
     <article className="profile-card billing-plan-missing">
-      <h2>Zahlungen noch nicht aktiv</h2>
-      <p className="empty-note">PayPal ist serverseitig noch nicht vollstÃ¤ndig konfiguriert. Damit kein Kunde bezahlt, ohne dass DexHost den Tarif sicher freischaltet, sind Zahlungsbuttons vorÃ¼bergehend deaktiviert.</p>
+      <h2>Manuelle Zahlungsprüfung aktiv</h2>
+      <p className="empty-note">PayPal kann Zahlungen annehmen. Solange API/Webhook noch nicht vollständig verbunden sind, speichert DexHost erfolgreiche Abos serverseitig zur Prüfung und schaltet Premium nicht unsicher im Browser frei.</p>
       <small>Aktuelle Umgebung: {environment}</small>
     </article>
   );
@@ -1923,9 +1924,7 @@ function LaunchServiceCards({ loadingService, paymentsReady, paypalEnvironment, 
             <ul className="pricing-feature-list">
               {service.features.map((feature) => <li key={feature}>{feature}</li>)}
             </ul>
-            {!paymentsReady ? (
-              <div className="billing-plan-missing">PayPal-Serverdaten fehlen. Zahlung in {paypalEnvironment} ist deaktiviert.</div>
-            ) : hostedButtonId ? (
+            {hostedButtonId ? (
               <PayPalHostedOneTimeButton serviceName={service.name} hostedButtonId={hostedButtonId} />
             ) : (
               <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
@@ -2127,7 +2126,7 @@ function PayPalSubscriptionButton({ planName, planId, userId, buttonStyle, onApp
       </div>
       <div id={containerId} className="paypal-subscription-container" />
       {status && <small>{status}</small>}
-      {!status && <small>Nach Freigabe prüft DexHost das Abo serverseitig und aktiviert den Tarif.</small>}
+      {!status && <small>Nach PayPal-Freigabe speichert DexHost das Abo serverseitig. Automatische Aktivierung erfolgt, sobald PayPal API/Webhook verbunden sind.</small>}
     </div>
   );
 }
@@ -2135,6 +2134,7 @@ function PayPalSubscriptionButton({ planName, planId, userId, buttonStyle, onApp
 function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profile: AccountProfile; status: string; onBilling: () => void; onDashboard: () => void }) {
   const isSetupPayment = status.includes("Einmalzahlung");
   const isConfirmed = status.includes("bestätigt") || status.includes("aktiv") || ["basic", "business", "pro", "admin"].includes(profile.plan);
+  const isPending = status.includes("gespeichert") || status.includes("geprüft") || status.includes("wartet");
   return (
     <section className="workspace account-page payment-success-page">
       <header className="topbar">
@@ -2152,7 +2152,7 @@ function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profi
           <button className="primary" onClick={onDashboard}>Übersicht öffnen</button>
         </div>
       </section>
-      {status && <p className={isConfirmed ? "form-message success" : "form-message error"}>{status}</p>}
+      {status && <p className={isConfirmed || isPending ? "form-message success" : "form-message error"}>{status}</p>}
       <section className="profile-grid">
         <article className="profile-card">
           <h2>Nächster Schritt</h2>
@@ -2186,7 +2186,7 @@ function BillingPage({ profile, status, loadingPlan, paymentsReady, paypalEnviro
         </div>
         <div className="account-actions"><button onClick={onBack}>Zurück zur Übersicht</button></div>
       </section>
-      {status && <p className={status.includes("bestätigt") || status.includes("aktiv") ? "form-message success" : "form-message error"}>{status}</p>}
+      {status && <p className={status.includes("bestätigt") || status.includes("aktiv") || status.includes("gespeichert") ? "form-message success" : "form-message error"}>{status}</p>}
       <section className="profile-grid">
         <article className="profile-card">
           <h2>Free</h2>
@@ -2215,7 +2215,7 @@ function BillingPage({ profile, status, loadingPlan, paymentsReady, paypalEnviro
               <h2>{plan.name}</h2>
               <strong>{plan.monthly} / Monat</strong>
               <p className="empty-note">{plan.description}</p>
-              {!paymentsReady ? <p className="billing-plan-missing">PayPal-Serverdaten fehlen. Abo-Start ist deaktiviert.</p> : subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} userId={profile.id} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
+              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} userId={profile.id} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
             </article>
           );
         })}
