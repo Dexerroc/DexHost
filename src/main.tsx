@@ -38,6 +38,8 @@ type StudioIntegrations = {
   openai: { configured: boolean; model: string };
   netlify: { hosting: boolean; identity: boolean; functions: boolean; blobs: boolean; forms: boolean; deploys: boolean; domains: boolean; dataStore?: string; assetStore?: string };
   canva: { available: boolean; mode: string; use: string };
+  paypal?: { configured: boolean; environment: string };
+  resend?: { configured: boolean; from: string };
   publishing: { starter: string; premium: string; providers: string[]; ssl: string };
 };
 type AccountProfile = {
@@ -1396,12 +1398,15 @@ function AppRoutes() {
     return <EmailActionPage key={route} kind={route === "/verify-email" ? "verify" : "reset"} currentPath={route} search={search} session={session || null} onNavigate={navigate} />;
   }
 
+  const paypalReady = Boolean(integrations?.paypal?.configured);
+  const paypalEnvironment = integrations?.paypal?.environment || "sandbox";
+
   if (publicPageKey === "launchHelp") {
-    return <LaunchHelpPage session={session || null} currentPath={route} status={launchPaymentStatus} loadingService={launchPaymentLoading} onNavigate={navigate} onCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} />;
+    return <LaunchHelpPage session={session || null} currentPath={route} status={launchPaymentStatus} loadingService={launchPaymentLoading} paymentsReady={paypalReady} paypalEnvironment={paypalEnvironment} onNavigate={navigate} onCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} />;
   }
 
   if (publicPageKey) {
-    return <PublicPage key={route} pageKey={publicPageKey} session={session || null} currentPath={route} launchStatus={launchPaymentStatus} launchLoadingService={launchPaymentLoading} onLaunchCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} onNavigate={navigate} />;
+    return <PublicPage key={route} pageKey={publicPageKey} session={session || null} currentPath={route} launchStatus={launchPaymentStatus} launchLoadingService={launchPaymentLoading} paymentsReady={paypalReady} paypalEnvironment={paypalEnvironment} onLaunchCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} onNavigate={navigate} />;
   }
 
   if (isAuthRoute) {
@@ -1467,7 +1472,7 @@ function AppRoutes() {
     return (
       <main className="app-shell route-transition">
         {sidebar}
-        <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} onBack={() => navigate("/dashboard")} onSubscriptionApprove={(plan, subscriptionId) => void activatePayPalSubscription(plan, subscriptionId)} />
+        <BillingPage profile={session.profile} status={billingStatus} loadingPlan={billingLoadingPlan} paymentsReady={paypalReady} paypalEnvironment={paypalEnvironment} onBack={() => navigate("/dashboard")} onSubscriptionApprove={(plan, subscriptionId) => void activatePayPalSubscription(plan, subscriptionId)} />
       </main>
     );
   }
@@ -1793,12 +1798,12 @@ function ExampleDetailPage({ example, session, currentPath, onNavigate }: { exam
   );
 }
 
-function PublicPage({ pageKey, session, currentPath, launchStatus, launchLoadingService, onLaunchCheckout, onNavigate }: { pageKey: PublicPageKey; session: AuthSession | null; currentPath: string; launchStatus: string; launchLoadingService: string; onLaunchCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
+function PublicPage({ pageKey, session, currentPath, launchStatus, launchLoadingService, paymentsReady, paypalEnvironment, onLaunchCheckout, onNavigate }: { pageKey: PublicPageKey; session: AuthSession | null; currentPath: string; launchStatus: string; launchLoadingService: string; paymentsReady: boolean; paypalEnvironment: string; onLaunchCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
   const page = publicPages[pageKey];
   const isContact = pageKey === "contact";
   const isExamples = pageKey === "examples";
   const featuredExamplePath = `/examples/${exampleCases[0].slug}`;
-  if (pageKey === "pricing") return <PricingPage session={session} currentPath={currentPath} status={launchStatus} loadingService={launchLoadingService} onCheckout={onLaunchCheckout} onNavigate={onNavigate} />;
+  if (pageKey === "pricing") return <PricingPage session={session} currentPath={currentPath} status={launchStatus} loadingService={launchLoadingService} paymentsReady={paymentsReady} paypalEnvironment={paypalEnvironment} onCheckout={onLaunchCheckout} onNavigate={onNavigate} />;
   return (
     <main className="public-shell route-transition">
       <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
@@ -1890,7 +1895,17 @@ function PayPalHostedOneTimeButton({ serviceName, hostedButtonId }: { serviceNam
   );
 }
 
-function LaunchServiceCards({ loadingService, onCheckout }: { loadingService: string; onCheckout: (serviceId: LaunchService["id"]) => void }) {
+function PaymentSetupNotice({ environment }: { environment: string }) {
+  return (
+    <article className="profile-card billing-plan-missing">
+      <h2>Zahlungen noch nicht aktiv</h2>
+      <p className="empty-note">PayPal ist serverseitig noch nicht vollstÃ¤ndig konfiguriert. Damit kein Kunde bezahlt, ohne dass DexHost den Tarif sicher freischaltet, sind Zahlungsbuttons vorÃ¼bergehend deaktiviert.</p>
+      <small>Aktuelle Umgebung: {environment}</small>
+    </article>
+  );
+}
+
+function LaunchServiceCards({ loadingService, paymentsReady, paypalEnvironment, onCheckout }: { loadingService: string; paymentsReady: boolean; paypalEnvironment: string; onCheckout: (serviceId: LaunchService["id"]) => void }) {
   return (
     <div className="pricing-grid launch-service-grid">
       {launchServices.map((service) => {
@@ -1908,7 +1923,9 @@ function LaunchServiceCards({ loadingService, onCheckout }: { loadingService: st
             <ul className="pricing-feature-list">
               {service.features.map((feature) => <li key={feature}>{feature}</li>)}
             </ul>
-            {hostedButtonId ? (
+            {!paymentsReady ? (
+              <div className="billing-plan-missing">PayPal-Serverdaten fehlen. Zahlung in {paypalEnvironment} ist deaktiviert.</div>
+            ) : hostedButtonId ? (
               <PayPalHostedOneTimeButton serviceName={service.name} hostedButtonId={hostedButtonId} />
             ) : (
               <button className={service.featured ? "primary" : ""} disabled={Boolean(loadingService)} onClick={() => onCheckout(service.id)}>
@@ -1922,7 +1939,7 @@ function LaunchServiceCards({ loadingService, onCheckout }: { loadingService: st
   );
 }
 
-function LaunchHelpPage({ session, currentPath, status, loadingService, onNavigate, onCheckout }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onNavigate: (path: string) => void; onCheckout: (serviceId: LaunchService["id"]) => void }) {
+function LaunchHelpPage({ session, currentPath, status, loadingService, paymentsReady, paypalEnvironment, onNavigate, onCheckout }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; paymentsReady: boolean; paypalEnvironment: string; onNavigate: (path: string) => void; onCheckout: (serviceId: LaunchService["id"]) => void }) {
   return (
     <main className="public-shell pricing-shell route-transition">
       <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
@@ -1950,7 +1967,8 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
           <h2>Setup-Leistungen</h2>
           <p>Klare Pakete für unterschiedliche Situationen: kurzer Check, geführte Einrichtung oder intensiver Premium-Feinschliff.</p>
         </div>
-        <LaunchServiceCards loadingService={loadingService} onCheckout={onCheckout} />
+        {!paymentsReady && <PaymentSetupNotice environment={paypalEnvironment} />}
+        <LaunchServiceCards loadingService={loadingService} paymentsReady={paymentsReady} paypalEnvironment={paypalEnvironment} onCheckout={onCheckout} />
       </section>
 
       <section className="pricing-faq launch-faq">
@@ -1962,7 +1980,7 @@ function LaunchHelpPage({ session, currentPath, status, loadingService, onNaviga
   );
 }
 
-function PricingPage({ session, currentPath, status, loadingService, onCheckout, onNavigate }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; onCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
+function PricingPage({ session, currentPath, status, loadingService, paymentsReady, paypalEnvironment, onCheckout, onNavigate }: { session: AuthSession | null; currentPath: string; status: string; loadingService: string; paymentsReady: boolean; paypalEnvironment: string; onCheckout: (serviceId: LaunchService["id"]) => void; onNavigate: (path: string) => void }) {
   const billingTarget = session ? "/billing" : "/register";
   return (
     <main className="public-shell pricing-shell route-transition">
@@ -2017,7 +2035,8 @@ function PricingPage({ session, currentPath, status, loadingService, onCheckout,
           <h2>Optionale Launch-Hilfe</h2>
           <p>Du kannst DexHost selbst einrichten. Wenn es schneller professionell wirken soll, buchst du hier eine einmalige Hilfe direkt per PayPal.</p>
         </div>
-        <LaunchServiceCards loadingService={loadingService} onCheckout={onCheckout} />
+        {!paymentsReady && <PaymentSetupNotice environment={paypalEnvironment} />}
+        <LaunchServiceCards loadingService={loadingService} paymentsReady={paymentsReady} paypalEnvironment={paypalEnvironment} onCheckout={onCheckout} />
       </section>
 
       <section className="pricing-compare">
@@ -2153,7 +2172,7 @@ function PaymentSuccessPage({ profile, status, onBilling, onDashboard }: { profi
   );
 }
 
-function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionApprove }: { profile: AccountProfile; status: string; loadingPlan: string; onBack: () => void; onSubscriptionApprove: (plan: AccountProfile["plan"], subscriptionId: string) => void }) {
+function BillingPage({ profile, status, loadingPlan, paymentsReady, paypalEnvironment, onBack, onSubscriptionApprove }: { profile: AccountProfile; status: string; loadingPlan: string; paymentsReady: boolean; paypalEnvironment: string; onBack: () => void; onSubscriptionApprove: (plan: AccountProfile["plan"], subscriptionId: string) => void }) {
   return (
     <section className="workspace account-page">
       <header className="topbar">
@@ -2174,6 +2193,7 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
           <p className="empty-note">Entwerfen, bearbeiten und testen.</p>
           <button disabled>{profile.plan === "free" ? "Aktueller Tarif" : "Kostenloser Tarif"}</button>
         </article>
+        {!paymentsReady && <PaymentSetupNotice environment={paypalEnvironment} />}
         {profile.paypal_subscription_id && (
           <article className="profile-card">
             <h2>Aktives PayPal-Abo</h2>
@@ -2195,7 +2215,7 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
               <h2>{plan.name}</h2>
               <strong>{plan.monthly} / Monat</strong>
               <p className="empty-note">{plan.description}</p>
-              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} userId={profile.id} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
+              {!paymentsReady ? <p className="billing-plan-missing">PayPal-Serverdaten fehlen. Abo-Start ist deaktiviert.</p> : subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} userId={profile.id} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
             </article>
           );
         })}
