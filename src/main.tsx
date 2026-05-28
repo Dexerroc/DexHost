@@ -68,7 +68,7 @@ type AuthSession = { authenticated: boolean; user: { id: string; email: string }
 type AuthMode = "login" | "register" | "forgot";
 type AuthForm = { email: string; password: string; displayName: string };
 type ProfileForm = Omit<AccountProfile, "id" | "email" | "plan" | "account_status" | "created_at" | "updated_at" | "last_login_at">;
-type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "launchHelp" | "impressum" | "datenschutz";
+type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "launchHelp" | "impressum" | "datenschutz" | "agb" | "widerruf" | "zahlungsbedingungen";
 type PublicPageContent = { navLabel: string; title: string; intro: string; proof: string[]; sections: Array<{ title: string; body: string }> };
 type PricingPlan = {
   id: AccountProfile["plan"];
@@ -296,24 +296,80 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
   },
   impressum: {
     navLabel: "Impressum",
-    title: "Impressum für DexHost.",
-    intro: "Diese Seite ist öffentlich erreichbar und als Platz für die rechtlichen Anbieterangaben vorbereitet.",
-    proof: ["Anbieterangaben", "Kontakt", "Verantwortliche Stelle"],
+    title: "Impressum",
+    intro: "Angaben gemäß § 5 DDG. Die folgenden Daten müssen vor Veröffentlichung mit den aktuellen DexSolutions-Unternehmensdaten abgeglichen werden.",
+    proof: ["Anbieterkennzeichnung", "Kontakt", "Verantwortlichkeit"],
     sections: [
-      { title: "Anbieter", body: "DexHost Betreiberangaben hier ergänzen." },
-      { title: "Kontakt", body: "E-Mail, Anschrift und Vertretungsberechtigte eintragen." },
-      { title: "Hinweis", body: "Rechtstexte sollten vor Veröffentlichung fachlich geprüft werden." }
+      { title: "Diensteanbieter", body: "DexSolutions / Betreiber von DexHost\n[Rechtsform ergänzen]\n[Vor- und Nachname bzw. Gesellschaft]\n[Anschrift laut dexsolutions.de]\n[PLZ und Ort]\nDeutschland" },
+      { title: "Kontakt", body: "E-Mail: [E-Mail-Adresse laut dexsolutions.de]\nTelefon: [Telefonnummer ergänzen]\nWebsite: https://dexhost.netlify.app" },
+      { title: "Vertretung und Register", body: "Vertreten durch: [Geschäftsführung/Inhaber ergänzen]\nRegistergericht: [falls vorhanden]\nRegisternummer: [falls vorhanden]\nUmsatzsteuer-ID gemäß § 27a UStG: [falls vorhanden]" },
+      { title: "Verantwortlich für Inhalte", body: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV: [Name und Anschrift ergänzen]." },
+      { title: "Streitbeilegung", body: "Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen." },
+      { title: "Haftung und Urheberrecht", body: "Die Inhalte dieser Website werden mit größter Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität übernehmen wir keine Gewähr. Eigene Inhalte, Designs, Texte und Grafiken unterliegen dem Urheberrecht. Eine Verwendung außerhalb der gesetzlichen Grenzen bedarf der vorherigen Zustimmung." }
     ]
   },
   datenschutz: {
     navLabel: "Datenschutz",
-    title: "Datenschutzinformationen für DexHost.",
-    intro: "Diese Seite ist öffentlich erreichbar und beschreibt die vorgesehenen Bausteine für Auth, Speicher, Forms und KI-Funktionen.",
-    proof: ["Serverseitige Anmeldung", "Sicherer Speicher", "KI optional"],
+    title: "Datenschutzerklärung",
+    intro: "Diese Datenschutzerklärung beschreibt, wie DexHost personenbezogene Daten verarbeitet. Bitte vor Livegang mit den tatsächlich eingesetzten Diensten und Anbieterangaben abgleichen.",
+    proof: ["DSGVO-Entwurf", "Netlify", "Resend und PayPal"],
     sections: [
-      { title: "Kontodaten", body: "Anmelde- und Profildaten werden sicher serverseitig verarbeitet." },
-      { title: "Website-Daten", body: "Projekte, JSON und Assets werden nutzerbezogen gespeichert." },
-      { title: "KI-Funktionen", body: "KI-Aufrufe laufen serverseitig. Inhalte sollten nur mit nötigen Projektdaten gesendet werden." }
+      { title: "Verantwortlicher", body: "Verantwortlich für die Datenverarbeitung ist DexSolutions / Betreiber von DexHost, [Anschrift], E-Mail: [E-Mail-Adresse]." },
+      { title: "Hosting und Server-Logs", body: "DexHost wird über Netlify betrieben. Beim Besuch der Website können technisch notwendige Zugriffsdaten verarbeitet werden, etwa IP-Adresse, Datum und Uhrzeit, Browser, Betriebssystem, Referrer und aufgerufene Seiten. Die Verarbeitung erfolgt zur Bereitstellung, Sicherheit und Stabilität der Website auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO." },
+      { title: "Registrierung und Login", body: "Bei der Registrierung verarbeiten wir E-Mail-Adresse, Passwort in gehashter Form, Anzeigename, Session-Daten und Zeitpunkte der Anmeldung. Diese Daten sind erforderlich, um ein Nutzerkonto bereitzustellen und geschützte Funktionen anzubieten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
+      { title: "E-Mail-Versand mit Resend", body: "Für E-Mail-Bestätigung und Passwort-Reset nutzen wir Resend. Dabei werden E-Mail-Adresse, Versanddaten und technische Zustellinformationen verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
+      { title: "Website-Projekte und Bilder", body: "Nutzer können Website-Daten, Texte, Profilangaben, Firmenangaben, Bilder, Logos und andere Assets speichern. Diese Daten werden projektbezogen verarbeitet, um den Website-Baukasten bereitzustellen." },
+      { title: "KI-Funktionen", body: "Wenn KI-Funktionen genutzt werden, können vom Nutzer eingegebene Projektinformationen an OpenAI übermittelt werden, um Texte, Struktur- oder Designvorschläge zu erzeugen. Es sollten keine unnötigen sensiblen Daten eingegeben werden." },
+      { title: "Zahlungen über PayPal", body: "Für Abonnements und Einmalzahlungen wird PayPal eingesetzt. Zahlungsdaten werden durch PayPal verarbeitet; DexHost speichert nur zahlungsbezogene Referenzen, Tarifstatus und Buchungsinformationen." },
+      { title: "Kontaktformulare", body: "Bei Kontaktanfragen verarbeiten wir die angegebenen Daten zur Bearbeitung der Anfrage. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO bzw. Art. 6 Abs. 1 lit. f DSGVO." },
+      { title: "Speicherdauer und Rechte", body: "Daten werden nur so lange gespeichert, wie sie für Konto, Vertrag, Sicherheit und gesetzliche Aufbewahrungspflichten erforderlich sind. Betroffene haben Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Beschwerde bei einer Aufsichtsbehörde." }
+    ]
+  },
+  agb: {
+    navLabel: "AGB",
+    title: "Allgemeine Geschäftsbedingungen",
+    intro: "Entwurf für die Nutzung von DexHost als AI Website Studio. Bitte vor produktivem Vertrieb rechtlich prüfen lassen.",
+    proof: ["Nutzung", "Tarife", "Pflichten"],
+    sections: [
+      { title: "Geltungsbereich", body: "Diese AGB gelten für die Nutzung von DexHost, einem webbasierten Website-Studio zur Erstellung, Bearbeitung und Veröffentlichung von Firmenwebsites." },
+      { title: "Leistungsumfang", body: "DexHost stellt einen kontrollierbaren Block-Editor, KI-gestützte Vorschläge, Bildverwaltung, Profilfunktionen, Vorschauen und je nach Tarif Veröffentlichungsfunktionen bereit. Die konkrete Verfügbarkeit einzelner Funktionen richtet sich nach dem gewählten Tarif." },
+      { title: "Nutzerkonto", body: "Für die Nutzung des Editors ist ein Konto erforderlich. Nutzer müssen zutreffende Angaben machen und Zugangsdaten vertraulich behandeln. Der Anbieter darf Zugänge sperren, wenn Missbrauch, Sicherheitsrisiken oder Zahlungsverzug vorliegen." },
+      { title: "Inhalte der Nutzer", body: "Nutzer sind für Texte, Bilder, Logos, Marken, Domains und sonstige Inhalte selbst verantwortlich. Es dürfen nur Inhalte verwendet werden, für die ausreichende Rechte bestehen." },
+      { title: "KI-Vorschläge", body: "KI-generierte Inhalte sind Vorschläge. Nutzer müssen Texte, Rechtmäßigkeit, Richtigkeit, Bildrechte, Markenrechte und branchenspezifische Aussagen vor Veröffentlichung prüfen." },
+      { title: "Verfügbarkeit", body: "Der Anbieter bemüht sich um eine stabile Bereitstellung. Wartung, Updates, Störungen bei Drittanbietern oder höhere Gewalt können die Verfügbarkeit zeitweise einschränken." },
+      { title: "Preise und Zahlung", body: "Es gelten die auf der Preiseseite angegebenen Tarife. Abonnements werden monatlich abgerechnet. Optionale Launch-Hilfen und Setup-Leistungen sind Einmalzahlungen." },
+      { title: "Kündigung", body: "Monatliche Tarife können grundsätzlich zum Ende des laufenden Abrechnungszeitraums gekündigt werden, sofern im Zahlungsanbieter nichts Abweichendes geregelt ist." },
+      { title: "Haftung", body: "Der Anbieter haftet unbeschränkt bei Vorsatz, grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Im Übrigen haftet der Anbieter nur nach den gesetzlichen Vorschriften." },
+      { title: "Schlussbestimmungen", body: "Es gilt deutsches Recht. Vertragssprache ist Deutsch. Sollten einzelne Bestimmungen unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt." }
+    ]
+  },
+  widerruf: {
+    navLabel: "Widerruf",
+    title: "Widerrufsbelehrung",
+    intro: "Entwurf für Verbraucher. Bei reinem B2B-Angebot kann eine andere Regelung sinnvoll sein. Bitte vor Livegang prüfen lassen.",
+    proof: ["14 Tage", "Digitale Leistung", "Setup-Service"],
+    sections: [
+      { title: "Widerrufsrecht", body: "Verbraucher haben grundsätzlich das Recht, binnen vierzehn Tagen ohne Angabe von Gründen einen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab Vertragsschluss." },
+      { title: "Ausübung des Widerrufs", body: "Um das Widerrufsrecht auszuüben, muss der Nutzer den Anbieter mittels eindeutiger Erklärung per E-Mail oder Brief über den Entschluss informieren, den Vertrag zu widerrufen. Kontakt: [E-Mail-Adresse und Anschrift ergänzen]." },
+      { title: "Folgen des Widerrufs", body: "Wenn der Vertrag widerrufen wird, erstatten wir alle erhaltenen Zahlungen unverzüglich und spätestens binnen vierzehn Tagen ab Eingang der Widerrufserklärung. Für die Rückzahlung verwenden wir dasselbe Zahlungsmittel, sofern nichts anderes vereinbart wurde." },
+      { title: "Digitale Inhalte und Dienstleistungen", body: "Bei digitalen Leistungen kann das Widerrufsrecht vorzeitig erlöschen, wenn der Nutzer ausdrücklich zustimmt, dass mit der Ausführung vor Ablauf der Widerrufsfrist begonnen wird, und bestätigt, dass er dadurch sein Widerrufsrecht verliert." },
+      { title: "Setup- und Launch-Hilfen", body: "Bei individuell erbrachten Setup- oder Launch-Leistungen kann Wertersatz verlangt werden, wenn der Nutzer ausdrücklich verlangt hat, dass die Leistung vor Ablauf der Widerrufsfrist beginnt." },
+      { title: "Muster-Widerruf", body: "Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Nutzung von DexHost bzw. die gebuchte Leistung. Name, E-Mail-Adresse, Bestelldatum, Datum und Unterschrift bei postalischer Zusendung." }
+    ]
+  },
+  zahlungsbedingungen: {
+    navLabel: "Zahlungsbedingungen",
+    title: "Zahlungs- und Abo-Hinweise",
+    intro: "Diese Hinweise erklären Tarife, Abos, Einmalzahlungen und Freischaltungen bei DexHost.",
+    proof: ["PayPal", "Monatliche Tarife", "Einmalige Setup-Leistungen"],
+    sections: [
+      { title: "Monatliche Tarife", body: "DexHost bietet Free, Basic, Business und Pro. Kostenpflichtige Tarife werden monatlich berechnet und schalten je nach Tarif Speicher, Veröffentlichung, Branding und weitere Funktionen frei." },
+      { title: "Free-Tarif", body: "Der Free-Tarif dient zum Testen und Entwerfen. Öffentliche Veröffentlichung, eigene Domains oder bestimmte Premiumfunktionen können eingeschränkt sein." },
+      { title: "PayPal-Abos", body: "Monatliche Zahlungen werden über PayPal abgewickelt. Die Freischaltung erfolgt erst, nachdem DexHost die Zahlung bzw. das Abo serverseitig bestätigt hat." },
+      { title: "Einmalzahlungen", body: "Launch-Hilfe, Setup-Service und Premium-Setup sind optionale Einmalzahlungen. Sie ersetzen kein Monatsabo und ändern nicht automatisch den Tarif." },
+      { title: "Freischaltung", body: "Tarif- und Veröffentlichungsrechte werden nicht im Browser gespeichert, sondern serverseitig geprüft. Dadurch kann ein Nutzer keine kostenpflichtige Funktion durch lokale Änderungen freischalten." },
+      { title: "Kündigung und fehlgeschlagene Zahlungen", body: "Abos können über PayPal bzw. die jeweils bereitgestellte Kontoverwaltung gekündigt werden. Bei fehlgeschlagenen Zahlungen können kostenpflichtige Funktionen eingeschränkt oder pausiert werden." },
+      { title: "Preise und Steuern", body: "Alle Preise verstehen sich, soweit nicht anders angegeben, zuzüglich gesetzlicher Umsatzsteuer. Maßgeblich sind die Angaben auf der Preiseseite zum Zeitpunkt der Buchung." }
     ]
   }
 };
@@ -625,7 +681,10 @@ function publicPageKeyFor(pathname: string): PublicPageKey | null {
     "/contact": "contact",
     "/launch-hilfe": "launchHelp",
     "/impressum": "impressum",
-    "/datenschutz": "datenschutz"
+    "/datenschutz": "datenschutz",
+    "/agb": "agb",
+    "/widerruf": "widerruf",
+    "/zahlungsbedingungen": "zahlungsbedingungen"
   };
   return map[route] || null;
 }
@@ -1755,6 +1814,9 @@ function PublicPage({ pageKey, session, currentPath, launchStatus, launchLoading
         <nav>
           <button onClick={() => onNavigate("/impressum")}>Impressum</button>
           <button onClick={() => onNavigate("/datenschutz")}>Datenschutz</button>
+          <button onClick={() => onNavigate("/agb")}>AGB</button>
+          <button onClick={() => onNavigate("/widerruf")}>Widerruf</button>
+          <button onClick={() => onNavigate("/zahlungsbedingungen")}>Zahlung</button>
           <button onClick={() => onNavigate("/login")}>Einloggen</button>
         </nav>
       </footer>
@@ -1964,6 +2026,11 @@ function PricingPage({ session, currentPath, status, loadingService, onCheckout,
           <button onClick={() => onNavigate("/examples")}>Beispiele</button>
           <button onClick={() => onNavigate("/faq")}>FAQ</button>
           <button onClick={() => onNavigate("/contact")}>Kontakt</button>
+          <button onClick={() => onNavigate("/impressum")}>Impressum</button>
+          <button onClick={() => onNavigate("/datenschutz")}>Datenschutz</button>
+          <button onClick={() => onNavigate("/agb")}>AGB</button>
+          <button onClick={() => onNavigate("/widerruf")}>Widerruf</button>
+          <button onClick={() => onNavigate("/zahlungsbedingungen")}>Zahlung</button>
         </nav>
       </footer>
     </main>
