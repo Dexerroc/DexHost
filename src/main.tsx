@@ -306,13 +306,13 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
   impressum: {
     navLabel: "Impressum",
     title: "Impressum",
-    intro: "Angaben gemäß § 5 DDG. Die folgenden Daten müssen vor Veröffentlichung mit den aktuellen DexSolutions-Unternehmensdaten abgeglichen werden.",
+    intro: "Angaben gemäß § 5 DDG.",
     proof: ["Anbieterkennzeichnung", "Kontakt", "Verantwortlichkeit"],
     sections: [
-      { title: "Diensteanbieter", body: "DexSolutions / Betreiber von DexHost\n[Rechtsform ergänzen]\n[Vor- und Nachname bzw. Gesellschaft]\n[Anschrift laut dexsolutions.de]\n[PLZ und Ort]\nDeutschland" },
-      { title: "Kontakt", body: "E-Mail: [E-Mail-Adresse laut dexsolutions.de]\nTelefon: [Telefonnummer ergänzen]\nWebsite: https://dexhost.netlify.app" },
-      { title: "Vertretung und Register", body: "Vertreten durch: [Geschäftsführung/Inhaber ergänzen]\nRegistergericht: [falls vorhanden]\nRegisternummer: [falls vorhanden]\nUmsatzsteuer-ID gemäß § 27a UStG: [falls vorhanden]" },
-      { title: "Verantwortlich für Inhalte", body: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV: [Name und Anschrift ergänzen]." },
+      { title: "Diensteanbieter", body: "DexHost\nBjörn Peters\nMünsterstrasse 419\n45721 Haltern am See\nDeutschland" },
+      { title: "Kontakt", body: "E-Mail: info@dexsolutions.de\nWebsite: https://dexsolutions.de\nProduktseite: https://dexhost.de" },
+      { title: "Vertretung und Register", body: "Vertreten durch: Björn Peters\nRegistergericht: nicht eingetragen\nRegisternummer: nicht vorhanden" },
+      { title: "Verantwortlich für Inhalte", body: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:\nBjörn Peters\nMünsterstrasse 419\n45721 Haltern am See" },
       { title: "Streitbeilegung", body: "Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen." },
       { title: "Haftung und Urheberrecht", body: "Die Inhalte dieser Website werden mit größter Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität übernehmen wir keine Gewähr. Eigene Inhalte, Designs, Texte und Grafiken unterliegen dem Urheberrecht. Eine Verwendung außerhalb der gesetzlichen Grenzen bedarf der vorherigen Zustimmung." }
     ]
@@ -323,7 +323,7 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     intro: "Diese Datenschutzerklärung beschreibt, wie DexHost personenbezogene Daten verarbeitet. Bitte vor Livegang mit den tatsächlich eingesetzten Diensten und Anbieterangaben abgleichen.",
     proof: ["DSGVO-Entwurf", "Netlify", "Resend und PayPal"],
     sections: [
-      { title: "Verantwortlicher", body: "Verantwortlich für die Datenverarbeitung ist DexSolutions / Betreiber von DexHost, [Anschrift], E-Mail: [E-Mail-Adresse]." },
+      { title: "Verantwortlicher", body: "Verantwortlich für die Datenverarbeitung ist:\nBjörn Peters\nMünsterstrasse 419\n45721 Haltern am See\nDeutschland\nE-Mail: info@dexsolutions.de\nWebsite: https://dexsolutions.de" },
       { title: "Hosting und Server-Logs", body: "DexHost wird über Netlify betrieben. Beim Besuch der Website können technisch notwendige Zugriffsdaten verarbeitet werden, etwa IP-Adresse, Datum und Uhrzeit, Browser, Betriebssystem, Referrer und aufgerufene Seiten. Die Verarbeitung erfolgt zur Bereitstellung, Sicherheit und Stabilität der Website auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO." },
       { title: "Registrierung und Login", body: "Bei der Registrierung verarbeiten wir E-Mail-Adresse, Passwort in gehashter Form, Anzeigename, Session-Daten und Zeitpunkte der Anmeldung. Diese Daten sind erforderlich, um ein Nutzerkonto bereitzustellen und geschützte Funktionen anzubieten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
       { title: "E-Mail-Versand mit Resend", body: "Für E-Mail-Bestätigung und Passwort-Reset nutzen wir Resend. Dabei werden E-Mail-Adresse, Versanddaten und technische Zustellinformationen verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
@@ -359,7 +359,7 @@ const publicPages: Record<PublicPageKey, PublicPageContent> = {
     proof: ["14 Tage", "Digitale Leistung", "Setup-Service"],
     sections: [
       { title: "Widerrufsrecht", body: "Verbraucher haben grundsätzlich das Recht, binnen vierzehn Tagen ohne Angabe von Gründen einen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab Vertragsschluss." },
-      { title: "Ausübung des Widerrufs", body: "Um das Widerrufsrecht auszuüben, muss der Nutzer den Anbieter mittels eindeutiger Erklärung per E-Mail oder Brief über den Entschluss informieren, den Vertrag zu widerrufen. Kontakt: [E-Mail-Adresse und Anschrift ergänzen]." },
+      { title: "Ausübung des Widerrufs", body: "Um das Widerrufsrecht auszuüben, muss der Nutzer den Anbieter mittels eindeutiger Erklärung per E-Mail oder Brief über den Entschluss informieren, den Vertrag zu widerrufen. Kontakt:\nBjörn Peters\nMünsterstrasse 419\n45721 Haltern am See\nE-Mail: info@dexsolutions.de" },
       { title: "Folgen des Widerrufs", body: "Wenn der Vertrag widerrufen wird, erstatten wir alle erhaltenen Zahlungen unverzüglich und spätestens binnen vierzehn Tagen ab Eingang der Widerrufserklärung. Für die Rückzahlung verwenden wir dasselbe Zahlungsmittel, sofern nichts anderes vereinbart wurde." },
       { title: "Digitale Inhalte und Dienstleistungen", body: "Bei digitalen Leistungen kann das Widerrufsrecht vorzeitig erlöschen, wenn der Nutzer ausdrücklich zustimmt, dass mit der Ausführung vor Ablauf der Widerrufsfrist begonnen wird, und bestätigt, dass er dadurch sein Widerrufsrecht verliert." },
       { title: "Setup- und Launch-Hilfen", body: "Bei individuell erbrachten Setup- oder Launch-Leistungen kann Wertersatz verlangt werden, wenn der Nutzer ausdrücklich verlangt hat, dass die Leistung vor Ablauf der Widerrufsfrist beginnt." },
