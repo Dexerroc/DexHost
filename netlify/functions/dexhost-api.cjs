@@ -33,6 +33,9 @@ const subscriptionPlanIds = {
   business: process.env.PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   pro: process.env.PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
 };
+const resendApiKey = process.env.RESEND_API_KEY || "";
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || "DexHost <onboarding@resend.dev>";
+const resendReplyTo = process.env.RESEND_REPLY_TO || "";
 
 function json(statusCode, body, cookies = []) {
   const response = {
@@ -70,6 +73,10 @@ function originFor(event) {
   const proto = event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https";
   const host = event.headers.host || event.headers.Host || process.env.URL || "localhost:8888";
   return host.startsWith("http") ? host.replace(/\/$/, "") : `${proto}://${host}`;
+}
+
+function appOriginFor(event) {
+  return clean(process.env.DEXHOST_APP_URL || process.env.URL || originFor(event)).replace(/\/$/, "");
 }
 
 function bodyJson(event) {
@@ -198,7 +205,8 @@ function authUserOut(row) {
     app_metadata: row.app_metadata || { plan: "free", roles: [] },
     created_at: row.created_at,
     last_login_at: row.last_login_at || "",
-    confirmed_at: row.confirmed_at || row.created_at,
+    confirmed_at: row.confirmed_at || "",
+    email_confirmed_at: row.email_confirmed_at || row.confirmed_at || "",
     account_status: row.account_status || "active"
   };
 }
@@ -217,6 +225,103 @@ function verifyPassword(password, storedHash = "") {
   return actual.length === expectedBuffer.length && crypto.timingSafeEqual(actual, expectedBuffer);
 }
 
+function mailConfigured() {
+  return Boolean(resendApiKey);
+}
+
+function authToken() {
+  return crypto.randomBytes(36).toString("base64url");
+}
+
+async function createAuthToken(userId, type, ttlMinutes = 60) {
+  const token = authToken();
+  const timestamp = now();
+  await blobSetJson(`auth/tokens/${type}/${stableHash(token)}.json`, {
+    user_id: userId,
+    type,
+    created_at: timestamp,
+    expires_at: new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString(),
+    used_at: ""
+  });
+  return token;
+}
+
+async function consumeAuthToken(type, token) {
+  const key = `auth/tokens/${type}/${stableHash(token)}.json`;
+  const row = await blobGetJson(key);
+  if (!row?.user_id || row.type !== type || row.used_at || !row.expires_at || new Date(row.expires_at).getTime() <= Date.now()) {
+    const error = new Error("Dieser Link ist ungültig oder abgelaufen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  await blobSetJson(key, { ...row, used_at: now() });
+  return row;
+}
+
+async function sendResendEmail({ to, subject, html, text }) {
+  if (!mailConfigured()) return { skipped: true };
+  const payload = { from: resendFromEmail, to: [to], subject, html, text };
+  if (resendReplyTo) payload.reply_to = resendReplyTo;
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.message || data.error || "Resend konnte die E-Mail nicht senden.");
+    error.statusCode = 502;
+    throw error;
+  }
+  return data;
+}
+
+function emailLayout({ title, intro, buttonLabel, buttonUrl, note }) {
+  const escapedUrl = buttonUrl.replace(/"/g, "&quot;");
+  return {
+    text: `${title}\n\n${intro}\n\n${buttonLabel}: ${buttonUrl}\n\n${note || "Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren."}`,
+    html: `
+      <div style="font-family:Inter,Arial,sans-serif;background:#f7f9f7;padding:28px;color:#151c1b">
+        <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dfe6e3;border-radius:14px;padding:28px">
+          <strong style="display:block;margin-bottom:18px;color:#24796f">DexHost</strong>
+          <h1 style="margin:0 0 12px;font-size:28px;line-height:1.1">${title}</h1>
+          <p style="margin:0 0 22px;line-height:1.6;color:#52605e">${intro}</p>
+          <a href="${escapedUrl}" style="display:inline-block;background:#151c1b;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 18px;font-weight:700">${buttonLabel}</a>
+          <p style="margin:24px 0 0;line-height:1.55;color:#697574;font-size:13px">${note || "Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren."}</p>
+        </div>
+      </div>`
+  };
+}
+
+async function sendVerificationEmail(event, user) {
+  const token = await createAuthToken(user.id, "verify-email", 60 * 24);
+  const buttonUrl = `${appOriginFor(event)}/verify-email?token=${encodeURIComponent(token)}`;
+  const mail = emailLayout({
+    title: "Bitte bestätige deine E-Mail-Adresse",
+    intro: "Damit dein DexHost-Konto geschützt ist, bestätige bitte diese E-Mail-Adresse.",
+    buttonLabel: "E-Mail bestätigen",
+    buttonUrl,
+    note: "Der Link ist 24 Stunden gültig."
+  });
+  return sendResendEmail({ to: user.email, subject: "DexHost E-Mail bestätigen", ...mail });
+}
+
+async function sendPasswordResetEmail(event, user) {
+  const token = await createAuthToken(user.id, "password-reset", 60);
+  const buttonUrl = `${appOriginFor(event)}/reset-password?token=${encodeURIComponent(token)}`;
+  const mail = emailLayout({
+    title: "Passwort zurücksetzen",
+    intro: "Über diesen sicheren Link kannst du ein neues DexHost-Passwort setzen.",
+    buttonLabel: "Passwort neu setzen",
+    buttonUrl,
+    note: "Der Link ist 60 Minuten gültig."
+  });
+  return sendResendEmail({ to: user.email, subject: "DexHost Passwort zurücksetzen", ...mail });
+}
+
 async function userByEmail(email) {
   const lookup = await blobGetJson(`auth/email/${stableHash(email)}.json`);
   if (!lookup?.user_id) return null;
@@ -231,16 +336,18 @@ async function createPasswordUser(email, password, displayName) {
     throw error;
   }
   const timestamp = now();
+  const requiresVerification = mailConfigured();
   const row = {
     id: crypto.randomUUID(),
     email,
     password_hash: passwordHash(password),
     user_metadata: { display_name: displayName, full_name: displayName, email },
     app_metadata: { plan: "free", roles: [] },
-    account_status: "active",
+    account_status: requiresVerification ? "pending_verification" : "active",
     created_at: timestamp,
     updated_at: timestamp,
-    confirmed_at: timestamp,
+    confirmed_at: requiresVerification ? "" : timestamp,
+    email_confirmed_at: requiresVerification ? "" : timestamp,
     last_login_at: timestamp
   };
   await blobSetJson(`auth/users/${row.id}.json`, row);
@@ -255,9 +362,48 @@ async function authenticatePasswordUser(email, password) {
     error.statusCode = 401;
     throw error;
   }
+  if (row.account_status === "pending_verification") {
+    const error = new Error("Bitte bestätige zuerst deine E-Mail-Adresse.");
+    error.statusCode = 403;
+    throw error;
+  }
   const next = { ...row, last_login_at: now(), updated_at: now() };
   await blobSetJson(`auth/users/${row.id}.json`, next);
   return authUserOut(next);
+}
+
+async function verifyEmailToken(token) {
+  const tokenRow = await consumeAuthToken("verify-email", token);
+  const row = await blobGetJson(`auth/users/${tokenRow.user_id}.json`);
+  if (!row) {
+    const error = new Error("Account nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const timestamp = now();
+  const next = { ...row, account_status: "active", confirmed_at: row.confirmed_at || timestamp, email_confirmed_at: row.email_confirmed_at || timestamp, updated_at: timestamp };
+  await blobSetJson(`auth/users/${row.id}.json`, next);
+  const profile = await blobGetJson(`profiles/${row.id}.json`);
+  if (profile) await blobSetJson(`profiles/${row.id}.json`, { ...profile, account_status: "active", updated_at: timestamp });
+  return authUserOut(next);
+}
+
+async function resetPasswordWithToken(token, password) {
+  if (String(password || "").length < 8) {
+    const error = new Error("Das neue Passwort muss mindestens 8 Zeichen lang sein.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const tokenRow = await consumeAuthToken("password-reset", token);
+  const row = await blobGetJson(`auth/users/${tokenRow.user_id}.json`);
+  if (!row) {
+    const error = new Error("Account nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const timestamp = now();
+  await blobSetJson(`auth/users/${row.id}.json`, { ...row, password_hash: passwordHash(password), updated_at: timestamp });
+  return true;
 }
 
 async function createSession(userId) {
@@ -736,6 +882,7 @@ function integrations() {
     },
     canva: { available: true, mode: "connector-briefs", use: "logos, banners, hero graphics, social assets, trust badges" },
     paypal: { configured: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), environment: clean(process.env.PAYPAL_ENV) || "sandbox" },
+    resend: { configured: mailConfigured(), from: resendFromEmail },
     publishing: { starter: `kunde.${subdomainSuffix}`, premium: "custom domain", providers: ["netlify-hosting", "netlify-deploys"], ssl: "automatic" }
   };
 }
@@ -1242,6 +1389,10 @@ exports.handler = async (event, context) => {
       const displayName = clean(body.displayName) || email;
       if (!email || password.length < 8) return json(400, { error: "Email and a password with at least 8 characters are required." });
       const user = await createPasswordUser(email, password, displayName);
+      if (mailConfigured()) {
+        await sendVerificationEmail(event, user);
+        return json(201, { authenticated: false, user: { id: user.id, email: userEmailFrom(user) || email }, emailVerificationRequired: true, mailProvider: "resend" });
+      }
       const session = await createSession(user.id);
       const auth = { user, userId: user.id, token: session.access_token };
       const profile = await ensureProfile(auth, { touchLastLogin: true });
@@ -1263,7 +1414,25 @@ exports.handler = async (event, context) => {
     if (method === "POST" && path === "/api/auth/forgot-password") {
       const email = clean(bodyJson(event).email).toLowerCase();
       if (!email) return json(400, { error: "Email is required." });
-      return json(200, { ok: true, message: "Passwort-Reset per E-Mail ist vorbereitet, aber noch nicht mit einem Mail-Anbieter verbunden." });
+      const user = await userByEmail(email);
+      if (user && mailConfigured()) await sendPasswordResetEmail(event, authUserOut(user));
+      return json(200, { ok: true, message: "Wenn ein Konto existiert, senden wir dir einen Link zum Zurücksetzen." });
+    }
+
+    if (method === "POST" && path === "/api/auth/verify-email") {
+      const token = clean(bodyJson(event).token);
+      if (!token) return json(400, { error: "Verifizierungslink fehlt." });
+      await verifyEmailToken(token);
+      return json(200, { ok: true, message: "E-Mail bestätigt. Du kannst dich jetzt anmelden." });
+    }
+
+    if (method === "POST" && path === "/api/auth/reset-password") {
+      const body = bodyJson(event);
+      const token = clean(body.token);
+      const password = String(body.password || "");
+      if (!token) return json(400, { error: "Reset-Link fehlt." });
+      await resetPasswordWithToken(token, password);
+      return json(200, { ok: true, message: "Passwort wurde geändert. Du kannst dich jetzt anmelden." });
     }
 
     if (method === "POST" && path === "/api/auth/logout") {

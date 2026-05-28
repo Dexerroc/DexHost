@@ -44,7 +44,8 @@ Geschuetzte UI-Routen:
 
 - `/dashboard/profile`
 - `/account`
-- `/launch-hilfe`
+- `/dashboard`
+- `/editor/:websiteId`
 
 Public:
 
@@ -59,6 +60,8 @@ Auth:
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password`
+- `POST /api/auth/verify-email`
+- `POST /api/auth/reset-password`
 - `POST /api/auth/logout`
 - `GET /api/auth/session`
 - `GET /api/account`
@@ -95,6 +98,10 @@ OPENAI_MODEL=gpt-4o-mini
 NETLIFY_SITE_ID=
 NETLIFY_API_TOKEN=
 NETLIFY_BUILD_HOOK_URL=
+DEXHOST_APP_URL=https://dexhost.netlify.app
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=DexHost <onboarding@resend.dev>
+RESEND_REPLY_TO=
 PAYPAL_ENV=sandbox
 PAYPAL_CLIENT_ID=
 PAYPAL_CLIENT_SECRET=
@@ -115,7 +122,9 @@ IMAGE_UPLOAD_MAX_BYTES=5242880
 
 Netlify Identity ist nicht erforderlich. Auth, Sessions, Profile und Rollen laufen ueber Netlify Functions und Netlify Blobs. Wenn Blobs in Netlify nicht automatisch konfiguriert sind, setze `NETLIFY_SITE_ID` auf die Project ID und `NETLIFY_API_TOKEN` auf einen Netlify Personal Access Token. Lokal nutzt die Function einen `.netlify-state` Dev-Fallback.
 
-PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Launch-Hilfe, Setup-Service und Premium-Setup laufen als separate Einmalzahlungen ueber `/launch-hilfe`; diese Zahlungen werden erst nach serverseitigem PayPal Capture als gebucht gespeichert. Optional kann ein PayPal Hosted Button fuer die Launch-Hilfe angezeigt werden, die sichere Account-Zuordnung bleibt aber die Netlify-Function-Route. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
+Resend ist fuer E-Mail-Verifizierung und Passwort-Reset vorbereitet. Solange keine eigene Domain registriert ist, kann `DEXHOST_APP_URL=https://dexhost.netlify.app` bleiben. Als Absender kann zum Start `DexHost <onboarding@resend.dev>` genutzt werden; fuer echte Kundenmails sollte spaeter eine eigene Domain in Resend verifiziert und dann `RESEND_FROM_EMAIL` angepasst werden. Ohne `RESEND_API_KEY` bleibt Registrierung wie ein lokaler Dev-Flow aktiv, mit `RESEND_API_KEY` muessen neue Nutzer ihre E-Mail bestaetigen, bevor sie sich anmelden koennen.
+
+PayPal Abos werden ueber PayPal Subscription Buttons gestartet. Fuer Tests `PAYPAL_ENV=sandbox` nutzen, fuer echte Zahlungen `PAYPAL_ENV=live` setzen und die Live-Credentials in Netlify hinterlegen. Nach erfolgreicher Freigabe prueft DexHost die Abo-ID serverseitig und leitet auf `/billing/success` weiter. Launch-Hilfe, Setup-Service und Premium-Setup werden direkt auf `/pricing` als separate Einmalzahlungen verkauft; diese Zahlungen werden erst nach serverseitigem PayPal Capture als gebucht gespeichert. Optional kann ein PayPal Hosted Button fuer die Launch-Hilfe angezeigt werden, die sichere Account-Zuordnung bleibt aber die Netlify-Function-Route. Fuer Kuendigungen, fehlgeschlagene Folgezahlungen und Statuswechsel ist spaeter ein PayPal Webhook massgeblich.
 
 ## Entwicklung
 

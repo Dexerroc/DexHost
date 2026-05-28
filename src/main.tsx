@@ -1012,7 +1012,7 @@ function AppRoutes() {
       if (!cookieValue("dexhost_csrf")) await request<{ csrfToken: string }>("/api/auth/csrf");
       if (authMode === "forgot") {
         await request<{ ok: boolean }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email: authForm.email }) });
-        setAuthStatus("Wenn das Konto existiert, wird der Reset vorbereitet. E-Mail-Versand wird später angebunden.");
+        setAuthStatus("Wenn das Konto existiert, senden wir dir einen Link zum Zurücksetzen.");
         return;
       }
       const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
@@ -1025,7 +1025,7 @@ function AppRoutes() {
         await loadProjectsFromServer();
         navigate("/dashboard");
       } else {
-        setAuthStatus("Registrierung angelegt. Bitte bestätige die E-Mail, bevor du dich anmeldest.");
+        setAuthStatus("Registrierung angelegt. Bitte prüfe deine E-Mail und bestätige den Link, bevor du dich anmeldest.");
         setAuthMode("login");
         navigate("/login");
       }
@@ -1306,6 +1306,10 @@ function AppRoutes() {
     return <ExampleDetailPage key={route} example={publicExample} session={session || null} currentPath={route} onNavigate={navigate} />;
   }
 
+  if (route === "/verify-email" || route === "/reset-password") {
+    return <EmailActionPage key={route} kind={route === "/verify-email" ? "verify" : "reset"} currentPath={route} search={search} session={session || null} onNavigate={navigate} />;
+  }
+
   if (publicPageKey === "launchHelp") {
     return <LaunchHelpPage session={session || null} currentPath={route} status={launchPaymentStatus} loadingService={launchPaymentLoading} onNavigate={navigate} onCheckout={(serviceId) => void startLaunchServiceCheckout(serviceId)} />;
   }
@@ -1470,6 +1474,75 @@ function App() {
 
 function ProtectedLoading({ message }: { message: string }) {
   return <main className="auth-shell route-transition"><section className="auth-card"><div className="brand"><div>DH</div><strong>DexHost</strong></div><p>{message}</p></section></main>;
+}
+
+function EmailActionPage({ kind, currentPath, search, session, onNavigate }: { kind: "verify" | "reset"; currentPath: string; search: string; session: AuthSession | null; onNavigate: (path: string) => void }) {
+  const token = useMemo(() => new URLSearchParams(search).get("token") || "", [search]);
+  const [status, setStatus] = useState(kind === "verify" ? "E-Mail wird bestätigt..." : "");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(kind === "verify");
+
+  useEffect(() => {
+    if (kind !== "verify") return;
+    let cancelled = false;
+    async function verify() {
+      try {
+        if (!token) throw new Error("Verifizierungslink fehlt.");
+        await request<{ csrfToken: string }>("/api/auth/csrf");
+        const response = await request<{ message: string }>("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) });
+        if (!cancelled) setStatus(response.message || "E-Mail bestätigt. Du kannst dich jetzt anmelden.");
+      } catch (error) {
+        if (!cancelled) setStatus(error instanceof Error ? error.message : "E-Mail konnte nicht bestätigt werden.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void verify();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, token]);
+
+  async function submitReset(event: React.FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setStatus("");
+    try {
+      if (!token) throw new Error("Reset-Link fehlt.");
+      await request<{ csrfToken: string }>("/api/auth/csrf");
+      const response = await request<{ message: string }>("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) });
+      setStatus(response.message || "Passwort wurde geändert. Du kannst dich jetzt anmelden.");
+      setPassword("");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Passwort konnte nicht geändert werden.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="auth-shell auth-page route-transition">
+      <PublicNav session={session} currentPath={currentPath} onNavigate={onNavigate} />
+      <section className="auth-card">
+        <div className="brand"><div>DH</div><strong>DexHost</strong></div>
+        <div className="auth-copy">
+          <h1>{kind === "verify" ? "E-Mail bestätigen" : "Passwort zurücksetzen"}</h1>
+          <p>{kind === "verify" ? "Wir prüfen den Link sicher im Hintergrund." : "Lege ein neues Passwort für dein DexHost-Konto fest."}</p>
+        </div>
+        {kind === "reset" && (
+          <form onSubmit={submitReset}>
+            <label>Neues Passwort<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} autoComplete="new-password" required /></label>
+            <button className="primary" disabled={loading}>{loading ? "Bitte warten..." : "Passwort speichern"}</button>
+          </form>
+        )}
+        {status && <p className="auth-status">{status}</p>}
+        <div className="auth-actions">
+          <button onClick={() => onNavigate("/login")}>Zur Anmeldung</button>
+          <button onClick={() => onNavigate("/register")}>Account erstellen</button>
+        </div>
+      </section>
+    </main>
+  );
 }
 
 function PublicNav({ session, currentPath, onNavigate }: { session: AuthSession | null; currentPath: string; onNavigate: (path: string) => void }) {
