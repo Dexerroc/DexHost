@@ -60,6 +60,15 @@ type AccountProfile = {
   avatar_url: string;
   plan: "free" | "basic" | "business" | "pro" | "admin";
   account_status: string;
+  billing_provider?: string;
+  billing_status?: string;
+  billing_reference?: string;
+  paypal_subscription_id?: string;
+  subscription_status?: string;
+  subscription_current_period_end?: string;
+  subscription_cancelled_at?: string;
+  subscription_last_event?: string;
+  premium_access_active?: boolean;
   created_at?: string;
   updated_at?: string;
   last_login_at?: string;
@@ -67,7 +76,7 @@ type AccountProfile = {
 type AuthSession = { authenticated: boolean; user: { id: string; email: string }; profile: AccountProfile };
 type AuthMode = "login" | "register" | "forgot";
 type AuthForm = { email: string; password: string; displayName: string };
-type ProfileForm = Omit<AccountProfile, "id" | "email" | "plan" | "account_status" | "created_at" | "updated_at" | "last_login_at">;
+type ProfileForm = Omit<AccountProfile, "id" | "email" | "plan" | "account_status" | "billing_provider" | "billing_status" | "billing_reference" | "paypal_subscription_id" | "subscription_status" | "subscription_current_period_end" | "subscription_cancelled_at" | "subscription_last_event" | "premium_access_active" | "created_at" | "updated_at" | "last_login_at">;
 type PublicPageKey = "home" | "pricing" | "features" | "examples" | "faq" | "contact" | "launchHelp" | "impressum" | "datenschutz" | "agb" | "widerruf" | "zahlungsbedingungen";
 type PublicPageContent = { navLabel: string; title: string; intro: string; proof: string[]; sections: Array<{ title: string; body: string }> };
 type PricingPlan = {
@@ -114,7 +123,7 @@ declare global {
     paypalSubscription?: {
       Buttons?: (options: {
         style: { shape: string; color: string; layout: string; label: string };
-        createSubscription: (data: unknown, actions: { subscription: { create: (options: { plan_id: string }) => Promise<string> | string } }) => Promise<string> | string;
+        createSubscription: (data: unknown, actions: { subscription: { create: (options: { plan_id: string; custom_id?: string }) => Promise<string> | string } }) => Promise<string> | string;
         onApprove: (data: { subscriptionID: string }) => void;
         onError?: (error: unknown) => void;
       }) => { render: (selector: string) => Promise<void> | void };
@@ -621,6 +630,23 @@ function planLabel(plan?: AccountProfile["plan"] | string) {
 function accountStatusLabel(status?: string) {
   const labels: Record<string, string> = { active: "Aktiv", pending: "Ausstehend", suspended: "Gesperrt", trial: "Testphase" };
   return labels[String(status || "active").toLowerCase()] || String(status || "Aktiv");
+}
+function billingStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    active: "Aktiv",
+    cancelled: "Gekündigt",
+    suspended: "Pausiert",
+    expired: "Abgelaufen",
+    payment_failed: "Zahlung fehlgeschlagen",
+    refunded: "Erstattet",
+    reversed: "Rückbuchung",
+    pending: "Ausstehend"
+  };
+  return labels[String(status || "").toLowerCase()] || "Nicht aktiv";
+}
+function hasPremiumAccess(profile: AccountProfile) {
+  if (profile.plan === "admin") return true;
+  return Boolean(profile.premium_access_active ?? ["basic", "business", "pro"].includes(profile.plan));
 }
 function publishingStatusLabel(status?: string) {
   const labels: Record<string, string> = { "not-started": "Entwurf", "ready-to-publish": "Bereit", published: "Veröffentlicht", draft: "Entwurf" };
@@ -2037,7 +2063,7 @@ function PricingPage({ session, currentPath, status, loadingService, onCheckout,
   );
 }
 
-function PayPalSubscriptionButton({ planName, planId, buttonStyle, onApprove }: { planName: string; planId: string; buttonStyle: { shape: string; color: string; layout: string; label: string }; onApprove: (subscriptionId: string) => void }) {
+function PayPalSubscriptionButton({ planName, planId, userId, buttonStyle, onApprove }: { planName: string; planId: string; userId: string; buttonStyle: { shape: string; color: string; layout: string; label: string }; onApprove: (subscriptionId: string) => void }) {
   const containerId = useMemo(() => `paypal-button-container-${planId}`, [planId]);
   const [status, setStatus] = useState("PayPal Abo-Button wird geladen...");
 
@@ -2050,7 +2076,7 @@ function PayPalSubscriptionButton({ planName, planId, buttonStyle, onApprove }: 
         const container = document.getElementById(containerId);
         const buttons = window.paypalSubscription?.Buttons?.({
           style: buttonStyle,
-          createSubscription: (_data, actions) => actions.subscription.create({ plan_id: planId }),
+          createSubscription: (_data, actions) => actions.subscription.create({ plan_id: planId, custom_id: userId }),
           onApprove: (data) => {
             if (data.subscriptionID) onApprove(data.subscriptionID);
           },
@@ -2071,7 +2097,7 @@ function PayPalSubscriptionButton({ planName, planId, buttonStyle, onApprove }: 
     return () => {
       cancelled = true;
     };
-  }, [buttonStyle, containerId, onApprove, planId]);
+  }, [buttonStyle, containerId, onApprove, planId, userId]);
 
   return (
     <div className="paypal-subscription-box">
@@ -2147,6 +2173,18 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
           <p className="empty-note">Entwerfen, bearbeiten und testen.</p>
           <button disabled>{profile.plan === "free" ? "Aktueller Tarif" : "Kostenloser Tarif"}</button>
         </article>
+        {profile.paypal_subscription_id && (
+          <article className="profile-card">
+            <h2>Aktives PayPal-Abo</h2>
+            <dl className="account-facts">
+              <dt>Status</dt><dd>{billingStatusLabel(profile.subscription_status || profile.billing_status)}</dd>
+              <dt>Abo-ID</dt><dd>{profile.paypal_subscription_id}</dd>
+              <dt>Bezahlt bis</dt><dd>{formatDate(profile.subscription_current_period_end)}</dd>
+              <dt>Letztes PayPal-Event</dt><dd>{profile.subscription_last_event || "Noch nicht empfangen"}</dd>
+            </dl>
+            <p className="empty-note">Kündigungen, pausierte Abos und fehlgeschlagene Zahlungen werden per PayPal Webhook serverseitig synchronisiert.</p>
+          </article>
+        )}
         {paidPricingPlans.map((plan) => {
           const subscriptionPlanId = subscriptionPayPalPlanIds[plan.id];
           const buttonStyle = subscriptionPayPalButtonStyles[plan.id] || { shape: "rect", color: "silver", layout: "vertical", label: "subscribe" };
@@ -2156,7 +2194,7 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
               <h2>{plan.name}</h2>
               <strong>{plan.monthly} / Monat</strong>
               <p className="empty-note">{plan.description}</p>
-              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
+              {subscriptionPlanId ? <PayPalSubscriptionButton planName={plan.name} planId={subscriptionPlanId} userId={profile.id} buttonStyle={buttonStyle} onApprove={(subscriptionId) => onSubscriptionApprove(plan.id, subscriptionId)} /> : <p className="billing-plan-missing">Für diesen Tarif ist noch kein monatlicher PayPal-Abo-Plan hinterlegt.</p>}
             </article>
           );
         })}
@@ -2166,7 +2204,7 @@ function BillingPage({ profile, status, loadingPlan, onBack, onSubscriptionAppro
 }
 
 function PublishPage({ website, projectId, profile, status, onBack, onPublish }: { website: WebsiteDocument; projectId: string; profile: AccountProfile; status: string; onBack: () => void; onPublish: () => void }) {
-  const canPublish = ["basic", "business", "pro", "admin"].includes(profile.plan);
+  const canPublish = hasPremiumAccess(profile);
   return (
     <section className="workspace account-page">
       <header className="topbar">
@@ -2261,6 +2299,9 @@ function AccountPage({ profile, form, status, saving, uploadConfig, onChange, on
             <h2>Abo & Nutzung</h2>
             <dl className="account-facts">
               <dt>Aktueller Tarif</dt><dd>{planLabel(profile.plan)}</dd>
+              <dt>Abo-Status</dt><dd>{billingStatusLabel(profile.subscription_status || profile.billing_status)}</dd>
+              <dt>PayPal-Abo</dt><dd>{profile.paypal_subscription_id || "Nicht hinterlegt"}</dd>
+              <dt>Bezahlt bis</dt><dd>{formatDate(profile.subscription_current_period_end)}</dd>
               <dt>Konto-Status</dt><dd>{accountStatusLabel(profile.account_status)}</dd>
               <dt>Erstellungsdatum</dt><dd>{formatDate(profile.created_at)}</dd>
               <dt>Letzte Anmeldung</dt><dd>{formatDate(profile.last_login_at)}</dd>

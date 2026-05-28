@@ -33,6 +33,7 @@ const subscriptionPlanIds = {
   business: process.env.PAYPAL_BUSINESS_SUBSCRIPTION_PLAN_ID || "P-78459601WB512822ENILXPCQ",
   pro: process.env.PAYPAL_PRO_SUBSCRIPTION_PLAN_ID || "P-37230392XM0019717NILXOXA"
 };
+const paypalWebhookId = process.env.PAYPAL_WEBHOOK_ID || "";
 const resendApiKey = process.env.RESEND_API_KEY || "";
 const resendFromEmail = process.env.RESEND_FROM_EMAIL || "DexHost <onboarding@resend.dev>";
 const resendReplyTo = process.env.RESEND_REPLY_TO || "";
@@ -552,10 +553,36 @@ function profileOut(profile, user) {
     avatar_url: profile.avatar_url || "",
     plan: profile.plan || "free",
     account_status: profile.account_status || identityAccountStatus(user),
+    billing_provider: profile.billing_provider || "",
+    billing_status: profile.billing_status || "",
+    billing_reference: profile.billing_reference || "",
+    paypal_subscription_id: profile.paypal_subscription_id || "",
+    subscription_status: profile.subscription_status || profile.billing_status || "",
+    subscription_current_period_end: profile.subscription_current_period_end || "",
+    subscription_cancelled_at: profile.subscription_cancelled_at || "",
+    subscription_last_event: profile.subscription_last_event || "",
+    premium_access_active: hasActivePaidEntitlement(profile),
     created_at: profile.created_at,
     updated_at: profile.updated_at || profile.created_at,
     last_login_at: profile.last_login_at || user.last_login_at || user.last_sign_in_at || ""
   };
+}
+
+function hasActivePaidEntitlement(profile = {}) {
+  const plan = profile.plan || "free";
+  if (plan === "admin") return true;
+  if (!paidPlans.has(plan)) return false;
+  const status = clean(profile.billing_status || profile.subscription_status || (plan === "free" ? "" : "active")).toLowerCase();
+  if (["active", "approved"].includes(status)) return true;
+  if (status === "cancelled" && profile.subscription_current_period_end) {
+    return new Date(profile.subscription_current_period_end).getTime() > Date.now();
+  }
+  return false;
+}
+
+function shouldDowngradeExpiredBilling(profile = {}) {
+  const status = clean(profile.billing_status || profile.subscription_status).toLowerCase();
+  return status === "cancelled" && profile.subscription_current_period_end && new Date(profile.subscription_current_period_end).getTime() <= Date.now();
 }
 
 function localPath(storeName, key, extension) {
@@ -644,6 +671,8 @@ async function ensureProfile(auth, options = {}) {
   const existing = await blobGetJson(key);
   const identityDerivedPlan = identityPlan(auth.user);
   const identityDerivedRoles = identityRoles(auth.user);
+  const existingPlan = editablePlans.has(existing?.plan) ? existing.plan : identityDerivedPlan;
+  const billingStatus = clean(existing?.billing_status || existing?.subscription_status || "").toLowerCase();
   const profile = {
     id: auth.userId,
     email: userEmailFrom(auth.user),
@@ -662,15 +691,28 @@ async function ensureProfile(auth, options = {}) {
     branding_colors: normalizedBrandingColors(existing?.branding_colors),
     logo_url: clean(existing?.logo_url || ""),
     avatar_url: clean(existing?.avatar_url || ""),
-    plan: editablePlans.has(existing?.plan) ? existing.plan : identityDerivedPlan,
+    plan: existingPlan,
     roles: Array.isArray(existing?.roles) && existing.roles.length ? existing.roles : identityDerivedRoles,
     stripe_customer_id: existing?.stripe_customer_id || null,
+    billing_provider: existing?.billing_provider || "",
+    billing_status: billingStatus,
+    billing_reference: existing?.billing_reference || "",
+    paypal_subscription_id: existing?.paypal_subscription_id || "",
+    subscription_status: existing?.subscription_status || billingStatus,
+    subscription_current_period_end: existing?.subscription_current_period_end || "",
+    subscription_cancelled_at: existing?.subscription_cancelled_at || "",
+    subscription_last_event: existing?.subscription_last_event || "",
     account_status: existing?.account_status || identityAccountStatus(auth.user),
     created_at: existing?.created_at || auth.user.created_at || now(),
     updated_at: now(),
     last_login_at: options.touchLastLogin ? now() : (existing?.last_login_at || auth.user.last_login_at || auth.user.last_sign_in_at || "")
   };
   if (identityDerivedPlan === "admin") profile.plan = "admin";
+  if (shouldDowngradeExpiredBilling(profile)) {
+    profile.plan = "free";
+    profile.billing_status = "expired";
+    profile.subscription_status = "expired";
+  }
   await blobSetJson(key, profile);
   return profile;
 }
@@ -708,6 +750,14 @@ async function updateProfile(auth, values) {
     email: profile.email,
     plan: profile.plan,
     stripe_customer_id: profile.stripe_customer_id,
+    billing_provider: profile.billing_provider,
+    billing_status: profile.billing_status,
+    billing_reference: profile.billing_reference,
+    paypal_subscription_id: profile.paypal_subscription_id,
+    subscription_status: profile.subscription_status,
+    subscription_current_period_end: profile.subscription_current_period_end,
+    subscription_cancelled_at: profile.subscription_cancelled_at,
+    subscription_last_event: profile.subscription_last_event,
     roles: profile.roles,
     updated_at: now()
   };
@@ -728,6 +778,11 @@ async function setProfilePlan(auth, plan, billing = {}) {
     billing_provider: billing.provider || "paypal",
     billing_status: billing.status || "active",
     billing_reference: billing.reference || "",
+    paypal_subscription_id: billing.subscriptionId || (billing.provider === "paypal-subscription" ? billing.reference : profile.paypal_subscription_id || ""),
+    subscription_status: billing.subscriptionStatus || billing.status || profile.subscription_status || "",
+    subscription_current_period_end: billing.currentPeriodEnd || profile.subscription_current_period_end || "",
+    subscription_cancelled_at: billing.cancelledAt || profile.subscription_cancelled_at || "",
+    subscription_last_event: billing.lastEvent || profile.subscription_last_event || "",
     updated_at: now()
   };
   await blobSetJson(`profiles/${auth.userId}.json`, next);
@@ -1107,7 +1162,7 @@ async function triggerNetlifyDeploy(row) {
 
 async function publishWebsite(auth, websiteId) {
   const profile = await ensureProfile(auth);
-  if (!paidPlans.has(profile.plan)) {
+  if (!hasActivePaidEntitlement(profile)) {
     const error = new Error("Publishing requires an active basic, business, pro, or admin plan.");
     error.statusCode = 402;
     throw error;
@@ -1180,6 +1235,175 @@ async function paypalRequest(path, options = {}) {
     throw error;
   }
   return data;
+}
+
+function headerValue(event, name) {
+  const lower = name.toLowerCase();
+  return clean(event.headers[name] || event.headers[lower] || event.headers[name.toUpperCase()] || "");
+}
+
+function planFromPayPalPlanId(planId) {
+  const entry = Object.entries(subscriptionPlanIds).find(([, value]) => value && value === planId);
+  return entry ? entry[0] : "";
+}
+
+function subscriptionPeriodEnd(subscription = {}) {
+  return clean(subscription.billing_info?.next_billing_time || subscription.billing_info?.last_payment?.time || subscription.next_billing_time || "");
+}
+
+function billingStatusFromPayPalStatus(status = "") {
+  const normalized = clean(status).toUpperCase();
+  if (normalized === "ACTIVE") return "active";
+  if (normalized === "APPROVAL_PENDING" || normalized === "APPROVED") return "pending";
+  if (normalized === "CANCELLED") return "cancelled";
+  if (normalized === "SUSPENDED") return "suspended";
+  if (normalized === "EXPIRED") return "expired";
+  return normalized ? normalized.toLowerCase() : "";
+}
+
+function billingStatusFromWebhook(eventType, subscription = {}) {
+  if (eventType === "PAYMENT.SALE.COMPLETED") return "active";
+  if (eventType === "PAYMENT.SALE.REFUNDED") return "refunded";
+  if (eventType === "PAYMENT.SALE.REVERSED") return "reversed";
+  if (eventType === "BILLING.SUBSCRIPTION.PAYMENT.FAILED") return "payment_failed";
+  if (eventType === "BILLING.SUBSCRIPTION.CANCELLED") return "cancelled";
+  if (eventType === "BILLING.SUBSCRIPTION.SUSPENDED") return "suspended";
+  if (eventType === "BILLING.SUBSCRIPTION.EXPIRED") return "expired";
+  if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED") return "active";
+  return billingStatusFromPayPalStatus(subscription.status);
+}
+
+function accessPlanForBilling(plan, billingStatus, currentPeriodEnd) {
+  if (!paidPlans.has(plan) || plan === "admin") return plan === "admin" ? "admin" : "free";
+  if (["active", "approved"].includes(billingStatus)) return plan;
+  if (billingStatus === "cancelled" && currentPeriodEnd && new Date(currentPeriodEnd).getTime() > Date.now()) return plan;
+  return "free";
+}
+
+async function verifiedPayPalWebhookEvent(event, webhookEvent) {
+  if (!paypalWebhookId) {
+    const error = new Error("PayPal Webhook ist noch nicht konfiguriert. Setze PAYPAL_WEBHOOK_ID in Netlify.");
+    error.statusCode = 503;
+    throw error;
+  }
+  const verification = await paypalRequest("/v1/notifications/verify-webhook-signature", {
+    method: "POST",
+    body: {
+      auth_algo: headerValue(event, "paypal-auth-algo"),
+      cert_url: headerValue(event, "paypal-cert-url"),
+      transmission_id: headerValue(event, "paypal-transmission-id"),
+      transmission_sig: headerValue(event, "paypal-transmission-sig"),
+      transmission_time: headerValue(event, "paypal-transmission-time"),
+      webhook_id: paypalWebhookId,
+      webhook_event: webhookEvent
+    }
+  });
+  if (verification.verification_status !== "SUCCESS") {
+    const error = new Error("PayPal Webhook-Signatur konnte nicht verifiziert werden.");
+    error.statusCode = 401;
+    throw error;
+  }
+  return webhookEvent;
+}
+
+async function paypalSubscriptionDetails(subscriptionId) {
+  if (!subscriptionId) return {};
+  try {
+    return await paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
+  } catch (error) {
+    return {};
+  }
+}
+
+async function applySubscriptionRowToProfile(row, eventType) {
+  if (!row?.user_id || !row.plan) return null;
+  const userRow = await blobGetJson(`auth/users/${row.user_id}.json`);
+  if (!userRow) return null;
+  const user = authUserOut(userRow);
+  const auth = { user, userId: row.user_id };
+  const profile = await ensureProfile(auth);
+  const billingStatus = row.billing_status || row.status || "active";
+  const accessPlan = accessPlanForBilling(row.plan, billingStatus, row.current_period_end);
+  const next = {
+    ...profile,
+    plan: profile.plan === "admin" ? "admin" : accessPlan,
+    billing_provider: "paypal-subscription",
+    billing_status: billingStatus,
+    billing_reference: row.id,
+    paypal_subscription_id: row.id,
+    subscription_status: billingStatus,
+    subscription_current_period_end: row.current_period_end || profile.subscription_current_period_end || "",
+    subscription_cancelled_at: billingStatus === "cancelled" ? (row.cancelled_at || now()) : profile.subscription_cancelled_at || "",
+    subscription_last_event: eventType,
+    updated_at: now()
+  };
+  await blobSetJson(`profiles/${row.user_id}.json`, next);
+  return next;
+}
+
+async function upsertPayPalSubscriptionFromWebhook(webhookEvent) {
+  const eventType = clean(webhookEvent.event_type);
+  const resource = webhookEvent.resource || {};
+  const subscriptionId = clean(eventType.startsWith("PAYMENT.SALE.") ? (resource.billing_agreement_id || resource.subscription_id) : (resource.id || resource.billing_agreement_id || resource.subscription_id));
+  if (!subscriptionId) return { ignored: true, reason: "no_subscription_id" };
+
+  const details = eventType.startsWith("BILLING.SUBSCRIPTION.") ? resource : await paypalSubscriptionDetails(subscriptionId);
+  const existing = await blobGetJson(`billing/paypal/subscriptions/${subscriptionId}.json`);
+  const paypalPlanId = clean(details.plan_id || resource.plan_id || existing?.paypal_plan_id || "");
+  const plan = clean(existing?.plan || planFromPayPalPlanId(paypalPlanId)).toLowerCase();
+  const userId = clean(existing?.user_id || details.custom_id || resource.custom_id || "");
+  const billingStatus = billingStatusFromWebhook(eventType, details);
+  const currentPeriodEnd = subscriptionPeriodEnd(details) || existing?.current_period_end || "";
+  const timestamp = now();
+  const row = {
+    ...(existing || {}),
+    id: subscriptionId,
+    user_id: userId,
+    plan,
+    paypal_plan_id: paypalPlanId,
+    status: clean(details.status || resource.status || billingStatus).toUpperCase(),
+    billing_status: billingStatus,
+    current_period_end: currentPeriodEnd,
+    cancelled_at: billingStatus === "cancelled" ? (existing?.cancelled_at || timestamp) : existing?.cancelled_at || "",
+    last_event_id: webhookEvent.id || "",
+    last_event_type: eventType,
+    created_at: existing?.created_at || details.create_time || timestamp,
+    updated_at: timestamp
+  };
+  await blobSetJson(`billing/paypal/subscriptions/${subscriptionId}.json`, row);
+  if (eventType.startsWith("PAYMENT.SALE.")) {
+    await blobSetJson(`billing/paypal/subscription-payments/${subscriptionId}/${webhookEvent.id || stableHash(JSON.stringify(resource))}.json`, {
+      subscription_id: subscriptionId,
+      event_id: webhookEvent.id || "",
+      event_type: eventType,
+      amount: resource.amount || null,
+      status: resource.state || resource.status || "",
+      created_at: timestamp,
+      resource_id: resource.id || ""
+    });
+  }
+  const profile = userId && plan ? await applySubscriptionRowToProfile(row, eventType) : null;
+  return { subscriptionId, plan, userId, billingStatus, profileUpdated: Boolean(profile) };
+}
+
+async function handlePayPalWebhook(event) {
+  const webhookEvent = bodyJson(event);
+  const eventId = clean(webhookEvent.id || stableHash(event.body || JSON.stringify(webhookEvent)));
+  const eventKey = `billing/paypal/webhook-events/${eventId}.json`;
+  const existing = await blobGetJson(eventKey);
+  if (existing?.processed_at) return { ok: true, duplicate: true, eventId };
+  await verifiedPayPalWebhookEvent(event, webhookEvent);
+  const result = await upsertPayPalSubscriptionFromWebhook(webhookEvent);
+  await blobSetJson(eventKey, {
+    id: eventId,
+    event_type: webhookEvent.event_type || "",
+    resource_type: webhookEvent.resource_type || "",
+    summary: webhookEvent.summary || "",
+    result,
+    received_at: existing?.received_at || now(),
+    processed_at: now()
+  });
+  return { ok: true, eventId, ...result };
 }
 
 async function createPayPalOrder(auth, event, plan) {
@@ -1334,10 +1558,20 @@ async function activatePayPalSubscription(auth, plan, subscriptionId) {
     plan,
     paypal_plan_id: subscription.plan_id,
     status: subscription.status,
+    billing_status: billingStatusFromPayPalStatus(subscription.status),
+    current_period_end: subscriptionPeriodEnd(subscription),
     created_at: subscription.create_time || now(),
     updated_at: now()
   });
-  const profile = await setProfilePlan(auth, plan, { provider: "paypal-subscription", status: "active", reference: subscriptionId });
+  const profile = await setProfilePlan(auth, plan, {
+    provider: "paypal-subscription",
+    status: "active",
+    reference: subscriptionId,
+    subscriptionId,
+    subscriptionStatus: "active",
+    currentPeriodEnd: subscriptionPeriodEnd(subscription),
+    lastEvent: "client-activation"
+  });
   return { profile, plan, status: subscription.status, subscriptionId };
 }
 
@@ -1359,6 +1593,11 @@ exports.handler = async (event, context) => {
     }
     if (method === "GET" && path === "/api/upload/config") return json(200, uploadConfig());
     if (method === "GET" && path === "/api/integrations/studio") return json(200, integrations());
+
+    if (method === "POST" && path === "/api/billing/paypal/webhook") {
+      const result = await handlePayPalWebhook(event);
+      return json(200, result);
+    }
 
     const publicMatch = path.match(/^\/api\/public\/websites\/([a-z0-9-]+)$/i);
     if (publicMatch && method === "GET") {
@@ -1546,7 +1785,7 @@ exports.handler = async (event, context) => {
     const domainMatch = path.match(/^\/api\/websites\/([0-9a-f-]{36})\/domain$/i);
     if (domainMatch && method === "POST") {
       const profile = await ensureProfile(auth);
-      if (!paidPlans.has(profile.plan)) return json(402, { error: "Custom domains require an active paid plan." }, auth.cookies);
+      if (!hasActivePaidEntitlement(profile)) return json(402, { error: "Custom domains require an active paid plan." }, auth.cookies);
       const current = await getOwnedWebsite(auth, domainMatch[1]);
       if (!current) return json(404, { error: "Website not found." }, auth.cookies);
       const customDomain = clean(bodyJson(event).customDomain).toLowerCase();
