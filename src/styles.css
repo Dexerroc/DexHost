@@ -1864,11 +1864,11 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
   --reach-panel: #0b1017;
   --reach-panel-2: #111823;
   --reach-line: #253041;
-  --reach-cyan: #29d3c2;
-  --reach-cyan-soft: rgba(41, 211, 194, .12);
+  --reach-cyan: #2dd4bf;
+  --reach-cyan-soft: rgba(45, 212, 191, .1);
   --reach-text: #e7eef8;
   --reach-muted: #9fb0c4;
-  --reach-button-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+  --reach-button-shadow: none;
 }
 
 .auth-card .primary,
@@ -1912,14 +1912,15 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .48rem;
-  min-height: 2.65rem;
+  gap: .42rem;
+  min-height: 2.28rem;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--reach-line) 82%, transparent);
   background: color-mix(in srgb, var(--reach-panel) 92%, transparent);
   color: var(--reach-text);
-  padding: .68rem 1rem;
-  font-weight: 820;
+  padding: .5rem .78rem;
+  font-size: .9rem;
+  font-weight: 680;
   line-height: 1;
   text-align: center;
   text-decoration: none;
@@ -1946,10 +1947,10 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
 .price-grid button:hover,
 .public-form-band button:hover {
   transform: translateY(-1px);
-  border-color: rgba(41, 211, 194, .5);
+  border-color: rgba(45, 212, 191, .46);
   background: var(--reach-panel-2);
   color: #ffffff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
+  box-shadow: none;
 }
 
 .auth-card .primary:hover,
@@ -1965,46 +1966,74 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
 .site-actions button:first-child:hover,
 .contact-inner button:hover,
 .price-grid button:hover {
-  background: #35ead9;
+  background: #5eead4;
   color: var(--reach-ink);
-  box-shadow: 0 14px 30px rgba(41, 211, 194, .18), 0 10px 24px rgba(0, 0, 0, .18);
+  box-shadow: none;
 }
 
 .public-actions .builder,
 .public-actions .ghost,
 .site-actions button + button,
 .live-site-actions button:not(:first-child) {
-  border-color: rgba(41, 211, 194, .32);
-  background: rgba(41, 211, 194, .08);
+  border-color: rgba(45, 212, 191, .26);
+  background: rgba(45, 212, 191, .055);
   color: #d9fffb;
 }
 
 .public-nav nav button {
   border-radius: 8px;
-  font-weight: 780;
+  min-height: 2.1rem;
+  padding: .38rem .58rem;
+  font-size: .86rem;
+  font-weight: 640;
 }
 
 .public-nav nav button.active,
 .public-actions button.active,
 .preview-top button.active,
 .auth-actions button.active {
-  border-color: rgba(41, 211, 194, .45);
+  border-color: rgba(45, 212, 191, .38);
   background: var(--reach-cyan-soft);
   color: #eafffb;
-  box-shadow: 0 0 0 3px rgba(41, 211, 194, .08);
+  box-shadow: none;
 }
 
 .public-brand span {
   border-radius: 8px;
   background: var(--reach-cyan);
   color: var(--reach-ink);
-  box-shadow: 0 10px 24px rgba(41, 211, 194, .12);
+  box-shadow: none;
 }
 
 .pricing-card button,
 .example-showcase-actions button,
 .text-link {
   border-radius: 8px;
+}
+
+.public-actions button {
+  min-height: 2.2rem;
+  padding: .45rem .68rem;
+  font-size: .84rem;
+}
+
+.public-cta-row button,
+.example-showcase-actions button,
+.live-site-actions button {
+  min-height: 2.42rem;
+  padding: .58rem .9rem;
+}
+
+.pricing-card button {
+  min-height: 2.36rem;
+  padding: .55rem .82rem;
+}
+
+.site-actions button,
+.contact-inner button,
+.price-grid button {
+  min-height: 2.34rem;
+  padding: .56rem .84rem;
 }
 
 @media (max-width: 1180px) {
