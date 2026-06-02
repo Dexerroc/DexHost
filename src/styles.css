@@ -1858,6 +1858,155 @@ input:focus, textarea:focus, select:focus { border-color: rgba(60, 188, 174, .48
 .asset-panel span, .asset-panel small { display: block; color: #9fb0c4; font-size: .76rem; margin-top: .2rem; }
 .asset-panel p { color: #c8d4e4; line-height: 1.5; font-size: .84rem; }
 
+/* DexReach-inspirierter Buttonstil: klar, dunkel, cyan, ohne laute Verläufe. */
+:root {
+  --reach-ink: #080b10;
+  --reach-panel: #0b1017;
+  --reach-panel-2: #111823;
+  --reach-line: #253041;
+  --reach-cyan: #29d3c2;
+  --reach-cyan-soft: rgba(41, 211, 194, .12);
+  --reach-text: #e7eef8;
+  --reach-muted: #9fb0c4;
+  --reach-button-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+}
+
+.auth-card .primary,
+.public-actions .primary,
+.public-cta-row .primary,
+.public-form-band button,
+.pricing-card button.primary,
+.example-showcase-actions .primary,
+.live-site-actions button:first-child,
+.account-actions .primary,
+.profile-card button.primary,
+.command-row .primary,
+.site-actions button:first-child,
+.contact-inner button,
+.price-grid button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--reach-cyan);
+  color: var(--reach-ink);
+  box-shadow: var(--reach-button-shadow);
+}
+
+.public-actions button,
+.public-cta-row button,
+.pricing-card button,
+.example-showcase-actions button,
+.live-site-actions button,
+.account-actions button,
+.profile-card button,
+.command-row button,
+.add-row button,
+.preview-top button,
+.auth-actions button,
+.account-card button,
+.account-strip button,
+.text-link,
+.site-actions button,
+.contact-inner button,
+.price-grid button,
+.public-form-band button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .48rem;
+  min-height: 2.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--reach-line) 82%, transparent);
+  background: color-mix(in srgb, var(--reach-panel) 92%, transparent);
+  color: var(--reach-text);
+  padding: .68rem 1rem;
+  font-weight: 820;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.public-actions button:hover,
+.public-cta-row button:hover,
+.pricing-card button:hover,
+.example-showcase-actions button:hover,
+.live-site-actions button:hover,
+.account-actions button:hover,
+.profile-card button:hover,
+.command-row button:hover,
+.add-row button:hover,
+.preview-top button:hover,
+.auth-actions button:hover,
+.account-card button:hover,
+.account-strip button:hover,
+.text-link:hover,
+.site-actions button:hover,
+.contact-inner button:hover,
+.price-grid button:hover,
+.public-form-band button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(41, 211, 194, .5);
+  background: var(--reach-panel-2);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
+}
+
+.auth-card .primary:hover,
+.public-actions .primary:hover,
+.public-cta-row .primary:hover,
+.public-form-band button:hover,
+.pricing-card button.primary:hover,
+.example-showcase-actions .primary:hover,
+.live-site-actions button:first-child:hover,
+.account-actions .primary:hover,
+.profile-card button.primary:hover,
+.command-row .primary:hover,
+.site-actions button:first-child:hover,
+.contact-inner button:hover,
+.price-grid button:hover {
+  background: #35ead9;
+  color: var(--reach-ink);
+  box-shadow: 0 14px 30px rgba(41, 211, 194, .18), 0 10px 24px rgba(0, 0, 0, .18);
+}
+
+.public-actions .builder,
+.public-actions .ghost,
+.site-actions button + button,
+.live-site-actions button:not(:first-child) {
+  border-color: rgba(41, 211, 194, .32);
+  background: rgba(41, 211, 194, .08);
+  color: #d9fffb;
+}
+
+.public-nav nav button {
+  border-radius: 8px;
+  font-weight: 780;
+}
+
+.public-nav nav button.active,
+.public-actions button.active,
+.preview-top button.active,
+.auth-actions button.active {
+  border-color: rgba(41, 211, 194, .45);
+  background: var(--reach-cyan-soft);
+  color: #eafffb;
+  box-shadow: 0 0 0 3px rgba(41, 211, 194, .08);
+}
+
+.public-brand span {
+  border-radius: 8px;
+  background: var(--reach-cyan);
+  color: var(--reach-ink);
+  box-shadow: 0 10px 24px rgba(41, 211, 194, .12);
+}
+
+.pricing-card button,
+.example-showcase-actions button,
+.text-link {
+  border-radius: 8px;
+}
+
 @media (max-width: 1180px) {
   .app-shell, .studio-layout, .page-title, .brief-grid, .account-strip, .profile-grid, .profile-fields.two, .profile-fields.three, .brand-upload-row { grid-template-columns: 1fr; }
   .public-nav, .public-hero, .public-section-head, .public-card-grid, .pricing-hero, .pricing-grid, .pricing-compare, .pricing-faq, .example-showcase, .example-showcase.is-reversed, .example-detail-hero, .example-detail-band, .example-story-grid { grid-template-columns: 1fr; }
